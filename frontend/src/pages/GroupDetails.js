@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Logo from '../components/Logo';
 import api from '../api';
 import './GroupDetails.css';
 
@@ -22,11 +21,7 @@ function GroupDetails() {
     notes: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, [groupId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [groupData, expensesData, balancesData, suggestionsData, settlementsData] = await Promise.all([
         api.getGroup(groupId),
@@ -45,7 +40,11 @@ function GroupDetails() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
