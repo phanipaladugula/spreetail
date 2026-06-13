@@ -3,6 +3,7 @@ package com.spreetail.expense.service;
 import com.spreetail.expense.dto.*;
 import com.spreetail.expense.model.*;
 import com.spreetail.expense.repository.*;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
