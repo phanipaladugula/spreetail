@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: spreetail-db
+    environment:
+      POSTGRES_DB: spreetail_db
+      POSTGRES_USER: spreetail
+      POSTGRES_PASSWORD: spreetail123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spreetail"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spreetail-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spreetail-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spreetail_db
+      SPRING_DATASOURCE_USERNAME: spreetail
+      SPRING_DATASOURCE_PASSWORD: spreetail123
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      JWT_SECRET: c3ByZWV0YWlsLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbi1nZW5lcmF0aW9uLWFuZC12YWxpZGF0aW9uLW11c3QtYmUtMjU2LWJpdHMtbG9uZw==
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/auth/register"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - spreetail-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spreetail-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - spreetail-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  spreetail-network:
+    driver: bridge
