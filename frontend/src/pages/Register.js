@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 import './Login.css';
 
 function Register() {
@@ -21,63 +22,105 @@ function Register() {
       return;
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     const result = await register(username, email, password);
 
     if (result.success) {
       navigate('/login');
     } else {
-      setError(result.error);
+      setError(typeof result.error === 'string' ? result.error : 'Registration failed. Please try again.');
     }
   };
 
   return (
     <div className="auth-container">
+      <div className="auth-background"></div>
       <div className="auth-card">
-        <h1>Spreetail</h1>
-        <h2>Register</h2>
-        {error && <div className="error">{error}</div>}
-        <form onSubmit={handleSubmit}>
+        <div className="auth-logo">
+          <Logo size="large" />
+        </div>
+        <h2>Create Account</h2>
+        <p className="auth-subtitle">Start splitting expenses with Spreetail</p>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Username:</label>
+            <label htmlFor="username">Username</label>
             <input
               type="text"
+              id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="johndoe"
               required
             />
           </div>
+
           <div className="form-group">
-            <label>Email:</label>
+            <label htmlFor="email">Email Address</label>
             <input
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
               required
             />
           </div>
+
           <div className="form-group">
-            <label>Password:</label>
+            <label htmlFor="password">Password</label>
             <input
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
               required
             />
+            <small className="form-hint">Must be at least 6 characters</small>
           </div>
+
           <div className="form-group">
-            <label>Confirm Password:</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
+              id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary">Register</button>
+
+          <button type="submit" className="btn btn-primary btn-block">
+            Create Account
+          </button>
         </form>
-        <p className="switch-auth">
-          Already have an account? <a href="/login">Login</a>
+
+        <p className="auth-footer">
+          Already have an account? <a href="/login">Sign In</a>
         </p>
+
+        <div className="auth-features">
+          <div className="feature">
+            <div className="feature-icon">💰</div>
+            <div className="feature-text">Track expenses</div>
+          </div>
+          <div className="feature">
+            <div className="feature-icon">⚖️</div>
+            <div className="feature-text">Split bills easily</div>
+          </div>
+          <div className="feature">
+            <div className="feature-icon">👥</div>
+            <div className="feature-text">Manage groups</div>
+          </div>
+        </div>
       </div>
     </div>
   );
