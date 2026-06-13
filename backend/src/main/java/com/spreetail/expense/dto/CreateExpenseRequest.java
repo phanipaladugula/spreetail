@@ -15,6 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class CreateExpenseRequest {
     private Long groupId;
+    private Long paidByUserId;  // Optional: used for CSV import to override current user
     private String description;
     private Double amount;
     private String currency;

@@ -1,12 +1,14 @@
 package com.spreetail.expense.controller;
 
 import com.spreetail.expense.dto.*;
+import com.spreetail.expense.service.CsvImportService;
 import com.spreetail.expense.service.ExpenseService;
 import com.spreetail.expense.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,10 +21,13 @@ public class ExpenseController {
 
     private final ExpenseService expenseService;
     private final UserService userService;
+    private final CsvImportService csvImportService;
 
-    public ExpenseController(ExpenseService expenseService, UserService userService) {
+    public ExpenseController(ExpenseService expenseService, UserService userService,
+                            CsvImportService csvImportService) {
         this.expenseService = expenseService;
         this.userService = userService;
+        this.csvImportService = csvImportService;
     }
 
     /**
@@ -89,6 +94,29 @@ public class ExpenseController {
             return ResponseEntity.ok(responses);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Import expenses from CSV file
+     * POST /api/expenses/import/{groupId}
+     */
+    @PostMapping("/import/{groupId}")
+    public ResponseEntity<?> importExpensesFromCsv(
+            @PathVariable Long groupId,
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Get user ID from token
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+
+            UserResponse user = userService.getUserByEmail(email);
+            List<ExpenseResponse> imported = csvImportService.importExpensesFromCsv(file, groupId, user.getId());
+            return ResponseEntity.ok(imported);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Failed to import CSV: " + e.getMessage());
         }
     }
 }

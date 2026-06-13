@@ -39,12 +39,15 @@ public class ExpenseService {
      */
     @Transactional
     public ExpenseResponse createExpense(CreateExpenseRequest request, Long paidByUserId) {
+        // Use paidByUserId from request if provided (for CSV import), otherwise use the passed user
+        Long actualPaidByUserId = request.getPaidByUserId() != null ? request.getPaidByUserId() : paidByUserId;
+
         // Validate group exists
         Group group = groupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
         // Validate user is member of group
-        if (!groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), paidByUserId).isPresent()) {
+        if (!groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), actualPaidByUserId).isPresent()) {
             throw new RuntimeException("User is not a member of this group");
         }
 
@@ -59,7 +62,7 @@ public class ExpenseService {
         Expense expense = new Expense();
         expense.setGroup(group);
         expense.setGroupId(request.getGroupId());
-        expense.setPaidBy(paidByUserId);
+        expense.setPaidBy(actualPaidByUserId);
         expense.setDescription(request.getDescription());
         expense.setAmount(request.getAmount());
         expense.setCurrency(request.getCurrency() != null ? request.getCurrency() : "INR");
