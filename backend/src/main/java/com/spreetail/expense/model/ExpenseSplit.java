@@ -29,10 +29,10 @@ public class ExpenseSplit {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "share_amount", precision = 12, scale = 2)
+    @Column(name = "share_amount", precision = 12)
     private Double shareAmount;
 
-    @Column(name = "share_percentage", precision = 5, scale = 2)
+    @Column(name = "share_percentage", precision = 5)
     private Double sharePercentage;
 
     @Column

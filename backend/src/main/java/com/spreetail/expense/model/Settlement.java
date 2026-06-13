@@ -30,7 +30,7 @@ public class Settlement {
     @Column(name = "to_user", nullable = false)
     private Long toUser;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12)
     private Double amount;
 
     @Column(length = 10)

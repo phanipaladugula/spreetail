@@ -36,7 +36,7 @@ public class Expense {
     @Column(nullable = false, length = 500)
     private String description;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false, precision = 12)
     private Double amount;
 
     @Column(length = 10)
