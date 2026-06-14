@@ -1,0 +1,32 @@
+.notification-badge {
+  position: relative;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.notification-badge:hover {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+.badge-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #ff0000;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}

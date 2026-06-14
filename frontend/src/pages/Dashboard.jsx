@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../components/Logo';
+import NotificationBadge from '../components/NotificationBadge';
+import LogoutConfirmModal from '../components/LogoutConfirmModal';
 import api from '../api';
 import './Dashboard.css';
 
@@ -11,8 +13,10 @@ function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDesc, setGroupDesc] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     loadGroups();
@@ -52,6 +56,15 @@ function Dashboard() {
     navigate('/group/' + groupId);
   };
 
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -67,11 +80,53 @@ function Dashboard() {
         <div className="header-brand">
           <Logo size="small" />
         </div>
+        <nav className="main-nav">
+          <button
+            className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+            onClick={() => navigate('/dashboard')}
+          >
+            📊 Dashboard
+          </button>
+          <button
+            className={`nav-link ${location.pathname === '/friends' ? 'active' : ''}`}
+            onClick={() => navigate('/friends')}
+          >
+            👥 Friends
+          </button>
+          <button
+            className={`nav-link ${location.pathname === '/activity' ? 'active' : ''}`}
+            onClick={() => navigate('/activity')}
+          >
+            📋 Activity
+          </button>
+          <button
+            className={`nav-link ${location.pathname === '/currencies' ? 'active' : ''}`}
+            onClick={() => navigate('/currencies')}
+          >
+            💱 Currencies
+          </button>
+          <button
+            className={`nav-link ${location.pathname === '/categories' ? 'active' : ''}`}
+            onClick={() => navigate('/categories')}
+          >
+            🏷️ Categories
+          </button>
+          <button
+            className={`nav-link ${location.pathname === '/receipts' ? 'active' : ''}`}
+            onClick={() => navigate('/receipts')}
+          >
+            🧾 Receipts
+          </button>
+        </nav>
         <div className="header-nav">
-          <span className="header-welcome">
-            Welcome, <strong>{user?.username || 'User'}</strong>
-          </span>
-          <button onClick={logout} className="btn btn-secondary btn-sm">
+          <NotificationBadge count={0} />
+          <button
+            className={`nav-link ${location.pathname === '/notifications' ? 'active' : ''}`}
+            onClick={() => navigate('/notifications')}
+          >
+            🔔 Notifications
+          </button>
+          <button onClick={handleLogout} className="btn btn-secondary btn-sm">
             Sign Out
           </button>
         </div>
@@ -154,13 +209,18 @@ function Dashboard() {
               >
                 Cancel
               </button>
-              <button onClick={handleCreateGroup} className="btn btn-primary">
+              <button type="submit" className="btn btn-primary">
                 Create Group
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 }
