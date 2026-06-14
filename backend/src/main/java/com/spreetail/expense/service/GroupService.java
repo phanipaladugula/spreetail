@@ -335,4 +335,46 @@ public class GroupService {
                 group.getCreatedAt() != null ? group.getCreatedAt().toString() : null
         );
     }
+
+    /**
+     * Get paginated groups for a user
+     * @param userId ID of the user
+     * @param page Page number (0-indexed)
+     * @param size Number of items per page
+     * @return PaginatedResponse with GroupResponse objects
+     */
+    public PaginatedResponse<GroupResponse> getUserGroupsPaginated(Long userId, int page, int size) {
+        // Validate page and size
+        if (page < 0) page = 0;
+        if (size < 1) size = 10;
+        if (size > 100) size = 100;
+
+        // Get total count
+        long totalElements = groupRepository.countByUserId(userId);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int skip = page * size;
+
+        List<Group> groups = groupRepository.findGroupsByMemberId(userId).stream()
+                .skip(skip)
+                .limit(size)
+                .toList();
+
+        List<GroupResponse> responses = new ArrayList<>();
+        for (Group group : groups) {
+            responses.add(convertToGroupResponse(group));
+        }
+
+        boolean first = page == 0;
+        boolean last = (page + 1) >= totalPages;
+
+        return new PaginatedResponse<>(
+                responses,
+                page,
+                size,
+                totalElements,
+                totalPages,
+                first,
+                last
+        );
+    }
 }

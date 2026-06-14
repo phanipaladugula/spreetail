@@ -19,4 +19,8 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     // Find groups where user is a member
     @Query("SELECT DISTINCT g FROM Group g JOIN GroupMember gm ON g.id = gm.groupId WHERE gm.userId = :userId")
     List<Group> findGroupsByMemberId(Long userId);
+
+    // Count total groups for a user
+    @Query("SELECT COUNT(g.id) FROM Group g JOIN GroupMember gm ON g.id = gm.groupId WHERE gm.userId = :userId")
+    long countByUserId(Long userId);
 }

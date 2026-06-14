@@ -4,6 +4,8 @@ import com.spreetail.expense.dto.*;
 import com.spreetail.expense.service.GroupService;
 import com.spreetail.expense.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.data.domain.Sort;
 
 /**
  * Controller class for Group operations
@@ -82,7 +86,9 @@ public class GroupController {
      * GET /api/groups/my
      */
     @GetMapping("/my")
-    public ResponseEntity<?> getUserGroups(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getUserGroups(@RequestHeader("Authorization") String authHeader,
+                                          @RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size) {
         try {
             // Validate auth header
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -95,10 +101,59 @@ public class GroupController {
             String email = userService.getUserEmailFromToken(token);
             UserResponse user = userService.getUserByEmail(email);
 
-            // Get user's groups
-            List<GroupResponse> responses = groupService.getUserGroups(user.getId());
-            return ResponseEntity.ok(createSuccessResponse(
-                "Groups retrieved successfully", responses));
+            // Get paginated groups
+            PaginatedResponse<GroupResponse> response = groupService.getUserGroupsPaginated(user.getId(), page, size);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Get all groups (paginated) - Admin endpoint
+     * GET /api/groups/all
+     */
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllGroups(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size) {
+        try {
+            int totalElements = (int) groupRepository.count();
+
+            List<Group> groups;
+            int totalPages;
+            boolean first, last;
+
+            if (size == -1) {
+                // Get all groups
+                groups = groupRepository.findAll();
+                totalPages = 1;
+                first = true;
+                last = true;
+            } else {
+                // Get paginated groups
+                int skip = page * size;
+                totalPages = (int) Math.ceil((double) totalElements / size);
+                groups = groupRepository.findAll(PageRequest.of(page, size));
+                first = page == 0;
+                last = (page + 1) >= totalPages;
+            }
+
+            List<GroupResponse> responses = new ArrayList<>();
+            for (Group group : groups) {
+                responses.add(groupService.convertToGroupResponse(group));
+            }
+
+            return ResponseEntity.ok(new PaginatedResponse<>(
+                    responses,
+                    page,
+                    size,
+                    totalElements,
+                    totalPages,
+                    first,
+                    last
+            ));
 
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -248,5 +303,19 @@ public class GroupController {
             response.put("data", data);
         }
         return response;
+    }
+
+    /**
+     * Make convertToGroupResponse public
+     */
+    private Map<String, Object> convertToGroupResponseToMap(GroupResponse response) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", response.getId());
+        result.put("name", response.getName());
+        result.put("description", response.getDescription());
+        result.put("createdBy", response.getCreatedBy());
+        result.put("members", response.getMembers());
+        result.put("createdAt", response.getCreatedAt());
+        return result;
     }
 }
