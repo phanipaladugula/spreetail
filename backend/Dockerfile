@@ -21,15 +21,11 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Copy the jar from builder
-COPY --from=builder /app/target/expense-sharing-1.0.0.jar app.jar
-
-# Expose port
-EXPOSE 8080
+# FIX: Using wildcard target/*.jar so it never fails on naming conventions
+COPY --from=builder /app/target/*.jar app.jar
 
 # Add a non-root user for security
 RUN addgroup -S spreetail && adduser -S spreetail -G spreetail
 USER spreetail:spreetail
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
