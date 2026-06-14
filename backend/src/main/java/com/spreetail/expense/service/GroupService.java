@@ -1,12 +1,11 @@
 package com.spreetail.expense.service;
 
 import com.spreetail.expense.dto.*;
-import com.spreetail.expense.model.Group;
-import com.spreetail.expense.model.GroupMember;
-import com.spreetail.expense.model.User;
+import com.spreetail.expense.model.*;
 import com.spreetail.expense.repository.GroupMemberRepository;
 import com.spreetail.expense.repository.GroupRepository;
 import com.spreetail.expense.repository.UserRepository;
+import com.spreetail.expense.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,13 +22,16 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final ExpenseRepository expenseRepository;
 
     public GroupService(GroupRepository groupRepository,
                          GroupMemberRepository groupMemberRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         ExpenseRepository expenseRepository) {
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
+        this.expenseRepository = expenseRepository;
     }
 
     /**
@@ -200,6 +202,80 @@ public class GroupService {
         groupMemberRepository.save(member);
 
         return convertToGroupResponse(group);
+    }
+
+    /**
+     * Update group
+     * @param groupId ID of the group to update
+     * @param request UpdateGroupRequest with name and/or description
+     * @param currentUserId ID of user making the update
+     * @return GroupResponse with updated group details
+     * @throws RuntimeException if group not found or user not authorized
+     */
+    @Transactional
+    public GroupResponse updateGroup(Long groupId, UpdateGroupRequest request, Long currentUserId) {
+        // Validate group exists
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        // Validate user is creator or admin
+        if (!group.getCreatedBy().equals(currentUserId)) {
+            throw new RuntimeException("Only group creator can update group");
+        }
+
+        // Update group fields
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            group.setName(request.getName().trim());
+        }
+        if (request.getDescription() != null) {
+            group.setDescription(request.getDescription().trim());
+        }
+
+        // Save updated group
+        Group savedGroup = groupRepository.save(group);
+
+        return convertToGroupResponse(savedGroup);
+    }
+
+    /**
+     * Delete group
+     * @param groupId ID of the group to delete
+     * @param currentUserId ID of user making the delete request
+     * @throws RuntimeException if group not found or user not authorized
+     */
+    @Transactional
+    public void deleteGroup(Long groupId, Long currentUserId) {
+        // Validate group exists
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        // Validate user is creator
+        if (!group.getCreatedBy().equals(currentUserId)) {
+            throw new RuntimeException("Only group creator can delete group");
+        }
+
+        // Get all expenses for this group through group members
+        List<Long> expenseIds = new ArrayList<>();
+        List<GroupMember> members = groupMemberRepository.findByGroupId(groupId);
+        for (GroupMember member : members) {
+            List<Expense> userExpenses = expenseRepository.findByPaidBy(member.getUserId());
+            for (Expense expense : userExpenses) {
+                if (expense.getGroupId().equals(groupId)) {
+                    expenseIds.add(expense.getId());
+                }
+            }
+        }
+
+        // Delete all expenses for this group
+        for (Long expenseId : expenseIds) {
+            expenseRepository.deleteById(expenseId);
+        }
+
+        // Delete all group members
+        groupMemberRepository.deleteByGroupId(groupId);
+
+        // Delete group
+        groupRepository.deleteById(groupId);
     }
 
     /**

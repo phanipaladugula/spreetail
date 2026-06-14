@@ -155,6 +155,63 @@ public class GroupController {
     }
 
     /**
+     * Update a group
+     * PUT /api/groups/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateGroup(@PathVariable Long id,
+                                        @RequestBody UpdateGroupRequest request,
+                                        @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("Missing or invalid authorization header"));
+            }
+
+            // Get user ID from token
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+            UserResponse user = userService.getUserByEmail(email);
+
+            GroupResponse response = groupService.updateGroup(id, request, user.getId());
+            return ResponseEntity.ok(createSuccessResponse(
+                "Group updated successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Delete a group
+     * DELETE /api/groups/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteGroup(@PathVariable Long id,
+                                        @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("Missing or invalid authorization header"));
+            }
+
+            // Get user ID from token
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+            UserResponse user = userService.getUserByEmail(email);
+
+            groupService.deleteGroup(id, user.getId());
+            return ResponseEntity.ok(createSuccessResponse(
+                "Group deleted successfully", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
      * Remove member from group
      * DELETE /api/groups/{id}/members/{userId}
      */
