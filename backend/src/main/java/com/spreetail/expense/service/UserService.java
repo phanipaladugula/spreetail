@@ -103,6 +103,83 @@ public class UserService {
     }
 
     /**
+     * Update user profile
+     * @param currentEmail Current user's email
+     * @param request UserProfileUpdateRequest with new values
+     * @return UserProfileResponse with updated profile
+     * @throws RuntimeException if validation fails or unauthorized
+     */
+    @Transactional
+    public UserProfileResponse updateProfile(String currentEmail, UserProfileUpdateRequest request) {
+        // Get current user
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Update username if provided
+        if (request.getUsername() != null && !request.getUsername().trim().isEmpty()) {
+            String newUsername = request.getUsername().trim();
+
+            // Check if username already taken by another user
+            userRepository.findByUsername(newUsername).ifPresent(otherUser -> {
+                if (!otherUser.getId().equals(user.getId())) {
+                    throw new RuntimeException("Username already taken");
+                }
+            });
+
+            user.setUsername(newUsername);
+        }
+
+        // Update email if provided
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            String newEmail = request.getEmail().trim();
+
+            // Check if email already taken by another user
+            userRepository.findByEmail(newEmail).ifPresent(otherUser -> {
+                if (!otherUser.getId().equals(user.getId())) {
+                    throw new RuntimeException("Email already registered");
+                }
+            });
+
+            user.setEmail(newEmail);
+        }
+
+        // Update password if requested
+        if (request.getNewPassword() != null && !request.getNewPassword().trim().isEmpty()) {
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                throw new RuntimeException("Passwords do not match");
+            }
+
+            if (request.getNewPassword().trim().length() < 6) {
+                throw new RuntimeException("Password must be at least 6 characters");
+            }
+
+            user.setPassword(passwordEncoder.encode(request.getNewPassword().trim()));
+        }
+
+        // Validate current password if email is being changed
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
+                throw new RuntimeException("Current password is required to change email");
+            }
+
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+        }
+
+        // Save updated user
+        User savedUser = userRepository.save(user);
+
+        // Return updated profile
+        return new UserProfileResponse(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getEmail(),
+                savedUser.getCreatedAt().toString()
+        );
+    }
+
+    /**
      * Get user email from JWT token
      */
     public String getUserEmailFromToken(String token) {

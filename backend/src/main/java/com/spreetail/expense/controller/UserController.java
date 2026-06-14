@@ -1,13 +1,9 @@
 package com.spreetail.expense.controller;
 
-import com.spreetail.expense.dto.LoginResponse;
-import com.spreetail.expense.dto.UserLoginRequest;
-import com.spreetail.expense.dto.UserRegisterRequest;
-import com.spreetail.expense.dto.UserResponse;
+import com.spreetail.expense.dto.*;
 import com.spreetail.expense.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -66,6 +62,25 @@ public class UserController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+    }
+
+    /**
+     * Update user profile
+     * PUT /api/auth/profile
+     */
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileUpdateRequest request,
+                                             @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extract token and email
+            String token = authHeader.substring(7);
+            String currentEmail = userService.getUserEmailFromToken(token);
+
+            UserProfileResponse response = userService.updateProfile(currentEmail, request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }
