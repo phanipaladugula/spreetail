@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: spreetail
       POSTGRES_PASSWORD: spreetail123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -36,6 +36,8 @@ services:
       SPRING_JPA_SHOW_SQL: false
       JWT_SECRET: c3ByZWV0YWlsLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbi1nZW5lcmF0aW9uLWFuZC12YWxpZGF0aW9uLW11c3QtYmUtMjU2LWJpdHMtbG9uZw==
       JWT_EXPIRATION: 86400000
+    env_file:
+      - ./backend/.env
     ports:
       - "8080:8080"
     depends_on:

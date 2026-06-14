@@ -1,15 +1,14 @@
-import React from 'react';
-import './EmptyState.css';
-
-function EmptyState({ icon = '📭', title = 'Nothing here', message = '', action = null }) {
+export default function EmptyState({ icon, title, description, action }) {
   return (
-    <div className="empty-state">
-      <div className="empty-icon">{icon}</div>
-      <h2>{title}</h2>
-      {message && <p>{message}</p>}
-      {action && <div className="empty-action">{action}</div>}
+    <div className="empty-state animate-fade-in">
+      {icon && (
+        <div className="empty-state-icon">
+          {icon}
+        </div>
+      )}
+      <div className="empty-state-title">{title}</div>
+      {description && <div className="empty-state-desc">{description}</div>}
+      {action}
     </div>
-  );
+  )
 }
-
-export default EmptyState;

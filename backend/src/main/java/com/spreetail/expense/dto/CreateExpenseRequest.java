@@ -23,4 +23,5 @@ public class CreateExpenseRequest {
     private List<Long> splitWith;
     private Map<String, Double> splitDetails;
     private String notes;
+    private String expenseDate; // Added for CSV parsing to handle temporal membership
 }

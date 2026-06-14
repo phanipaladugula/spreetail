@@ -31,14 +31,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // Enable CORS integration with Spring Security
+                .cors(org.springframework.security.config.Customizer.withDefaults())
+                
                 // Disable CSRF for REST API
                 .csrf(csrf -> csrf.disable())
 
                 // Configure authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Allow public access to auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         // All other requests need authentication
                         .anyRequest().authenticated()
                 )

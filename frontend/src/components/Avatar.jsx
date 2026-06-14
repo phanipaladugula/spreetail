@@ -1,47 +1,52 @@
-import React from 'react';
-import './Avatar.css';
+const AVATAR_COLORS = [
+  ['#09cca9', '#065f46'],
+  ['#3b82f6', '#1e3a8a'],
+  ['#f59e0b', '#78350f'],
+  ['#ef4444', '#7f1d1d'],
+  ['#8b5cf6', '#3b0764'],
+  ['#ec4899', '#831843'],
+  ['#06b6d4', '#164e63'],
+  ['#84cc16', '#365314'],
+]
 
-function Avatar({ name, size = 'medium', imageUrl = null, className = '' }) {
+function getColor(name = '') {
+  const idx = name.charCodeAt(0) % AVATAR_COLORS.length
+  return AVATAR_COLORS[idx]
+}
+
+export default function Avatar({ name = '?', size = 36, className = '' }) {
   const initials = name
     .split(' ')
-    .map(n => n.charAt(0).toUpperCase())
+    .map((w) => w[0])
     .join('')
-    .slice(0, 2);
+    .substring(0, 2)
+    .toUpperCase()
 
-  const sizeClasses = {
-    small: 'avatar-small',
-    medium: 'avatar-medium',
-    large: 'avatar-large'
-  };
-
-  const backgroundColor = imageUrl ? 'transparent' : stringToColor(name);
+  const [bg, border] = getColor(name)
 
   return (
     <div
-      className={`avatar ${sizeClasses[size]} ${className}`}
-      style={{ backgroundColor }}
+      className={`avatar ${className}`}
+      title={name}
+      style={{
+        width: size,
+        height: size,
+        minWidth: size,
+        borderRadius: '50%',
+        background: `linear-gradient(135deg, ${bg}33, ${border}66)`,
+        border: `1.5px solid ${bg}55`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: size * 0.38,
+        fontWeight: '600',
+        color: bg,
+        fontFamily: 'var(--font-primary)',
+        userSelect: 'none',
+        flexShrink: 0,
+      }}
     >
-      {imageUrl ? (
-        <img src={imageUrl} alt={name} />
-      ) : (
-        <span>{initials}</span>
-      )}
+      {initials || '?'}
     </div>
-  );
+  )
 }
-
-function stringToColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
-  ];
-
-  return colors[Math.abs(hash) % colors.length];
-}
-
-export default Avatar;

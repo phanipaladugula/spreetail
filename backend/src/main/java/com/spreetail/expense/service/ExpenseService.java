@@ -21,17 +21,20 @@ public class ExpenseService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public ExpenseService(ExpenseRepository expenseRepository,
                           ExpenseSplitRepository expenseSplitRepository,
                           GroupRepository groupRepository,
                           GroupMemberRepository groupMemberRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          EmailService emailService) {
         this.expenseRepository = expenseRepository;
         this.expenseSplitRepository = expenseSplitRepository;
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -75,6 +78,29 @@ public class ExpenseService {
         // Create splits based on split type
         List<ExpenseSplit> splits = createSplits(savedExpense, request);
         savedExpense.setSplits(splits);
+
+        // Send email notifications to all members except the one who paid
+        User paidByUser = userRepository.findById(actualPaidByUserId).orElse(null);
+        String paidByUsername = paidByUser != null ? paidByUser.getUsername() : "Someone";
+        
+        List<GroupMember> members = groupMemberRepository.findByGroupId(group.getId());
+        for (GroupMember member : members) {
+            if (!member.getUserId().equals(actualPaidByUserId) && member.getStatus().equals("active")) {
+                User memberUser = userRepository.findById(member.getUserId()).orElse(null);
+                if (memberUser != null) {
+                    emailService.sendExpenseAddedEmail(
+                            memberUser.getEmail(), 
+                            memberUser.getUsername(), 
+                            group.getName(), 
+                            savedExpense.getDescription(), 
+                            savedExpense.getAmount(), 
+                            savedExpense.getCurrency(), 
+                            paidByUsername, 
+                            group.getId()
+                    );
+                }
+            }
+        }
 
         return convertToExpenseResponse(savedExpense);
     }
@@ -241,8 +267,11 @@ public class ExpenseService {
         if (request.getSplitType() != null || request.getSplitWith() != null ||
             request.getSplitDetails() != null) {
 
-            // Delete old splits
-            expenseSplitRepository.deleteByExpenseId(expenseId);
+            // Delete old splits individually
+            List<ExpenseSplit> oldSplits = expenseSplitRepository.findByExpenseId(expenseId);
+            for (ExpenseSplit split : oldSplits) {
+                expenseSplitRepository.delete(split);
+            }
 
             // Create new splits
             CreateExpenseRequest splitRequest = new CreateExpenseRequest();

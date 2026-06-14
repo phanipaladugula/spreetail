@@ -1,186 +1,114 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
-import './Login.css';
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
+import { login } from '../api/auth'
+import { useAuth } from '../context/AuthContext'
+import SpreetailLogo from '../components/SpreetailLogo'
+import toast from 'react-hot-toast'
 
-/**
- * Login Page
- * Professional Spreetail-inspired authentication page
- */
-function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
+export default function Login() {
+  const navigate = useNavigate()
+  const { loginUser } = useAuth()
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setLoading(true);
+    e.preventDefault()
+    if (!form.email || !form.password) return toast.error('Fill in all fields')
+    setLoading(true)
     try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard');
-    } catch (error) {
-      setErrors({
-        submit: error.message || 'Login failed. Please check your credentials.'
-      });
+      const res = await login(form)
+      loginUser(res.data.token, res.data.user)
+      toast.success(`Welcome back, ${res.data.user.username}!`)
+      navigate('/dashboard')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Invalid email or password')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        {/* Logo Section */}
-        <div className="login-header">
-          <div className="login-logo">
-            <Logo size="large" />
-          </div>
-          <h1 className="login-title">Welcome back</h1>
-          <p className="login-subtitle">Sign in to manage your shared expenses</p>
+    <div className="auth-page">
+      <div className="auth-bg" />
+      <div className="auth-dots" />
+
+      <div className="auth-card">
+        <div className="auth-logo-wrap">
+          <SpreetailLogo height={26} color="#09cca9" />
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="login-form">
-          {/* Error Alert */}
-          {errors.submit && (
-            <div className="alert alert-danger">
-              <span>⚠️</span>
-              {errors.submit}
-            </div>
-          )}
+        <h1 className="auth-heading">Welcome back</h1>
+        <p className="auth-subheading">Sign in to your account to continue</p>
 
-          {/* Email Field */}
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email address</label>
+            <label className="form-label" htmlFor="login-email">Email</label>
             <input
+              id="login-email"
+              className="form-input"
               type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
               placeholder="you@example.com"
-              className={errors.email ? 'error' : ''}
-              disabled={loading}
               autoComplete="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              autoFocus
             />
-            {errors.email && <span className="form-error">{errors.email}</span>}
           </div>
 
-          {/* Password Field */}
           <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input-wrapper">
+            <label className="form-label" htmlFor="login-password">Password</label>
+            <div style={{ position: 'relative' }}>
               <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                id="login-password"
+                className="form-input"
+                type={showPass ? 'text' : 'password'}
                 placeholder="••••••••"
-                className={errors.password ? 'error' : ''}
-                disabled={loading}
                 autoComplete="current-password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                style={{ paddingRight: '2.75rem' }}
               />
               <button
                 type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                id="toggle-password-visibility"
+                onClick={() => setShowPass((v) => !v)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-text-dim)',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                }}
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {errors.password && <span className="form-error">{errors.password}</span>}
           </div>
 
-          {/* Submit Button */}
-          <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
+          <button
+            id="login-submit"
+            type="submit"
+            className="btn btn-primary btn-full btn-lg"
+            disabled={loading}
+            style={{ marginTop: '0.5rem' }}
+          >
+            {loading ? <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2.5 }} /> : null}
+            Sign In
           </button>
         </form>
 
-        {/* Footer */}
-        <div className="login-footer">
-          <p className="login-footer-text">
-            Don't have an account?{' '}
-            <Link to="/register" className="link-primary">
-              Create one
-            </Link>
-          </p>
-        </div>
-
-        {/* Features */}
-        <div className="login-features">
-          <div className="feature-item">
-            <span className="feature-icon">💰</span>
-            <span className="feature-text">Track expenses</span>
-          </div>
-          <div className="feature-item">
-            <span className="feature-icon">⚖️</span>
-            <span className="feature-text">Split bills easily</span>
-          </div>
-          <div className="feature-item">
-            <span className="feature-icon">👥</span>
-            <span className="feature-text">Manage groups</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Background Decoration */}
-      <div className="login-background">
-        <div className="gradient-circle circle-1"></div>
-        <div className="gradient-circle circle-2"></div>
-        <div className="gradient-circle circle-3"></div>
+        <p className="auth-footer">
+          Don't have an account?{' '}
+          <Link to="/register" id="go-to-register">Sign up for free</Link>
+        </p>
       </div>
     </div>
-  );
+  )
 }
-
-export default Login;

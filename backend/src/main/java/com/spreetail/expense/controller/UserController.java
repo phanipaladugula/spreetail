@@ -4,6 +4,7 @@ import com.spreetail.expense.dto.*;
 import com.spreetail.expense.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -30,7 +31,23 @@ public class UserController {
             UserResponse response = userService.registerUser(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Verify OTP
+     * POST /api/auth/verify-otp
+     */
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody java.util.Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String otp = request.get("otp");
+            UserResponse response = userService.verifyOtp(email, otp);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

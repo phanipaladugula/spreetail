@@ -19,17 +19,23 @@ public class SettlementService {
     private final ExpenseSplitRepository expenseSplitRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
+    private final EmailService emailService;
 
     public SettlementService(SettlementRepository settlementRepository,
                              ExpenseRepository expenseRepository,
                              ExpenseSplitRepository expenseSplitRepository,
                              GroupMemberRepository groupMemberRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             GroupRepository groupRepository,
+                             EmailService emailService) {
         this.settlementRepository = settlementRepository;
         this.expenseRepository = expenseRepository;
         this.expenseSplitRepository = expenseSplitRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
+        this.groupRepository = groupRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -41,9 +47,6 @@ public class SettlementService {
         List<BalanceResponse> balances = new ArrayList<>();
 
         for (GroupMember member : members) {
-            if (!member.getStatus().equals("active")) {
-                continue;
-            }
 
             Long userId = member.getUserId();
             Double totalOwed = 0.0;
@@ -89,6 +92,11 @@ public class SettlementService {
             }
 
             Double netBalance = totalToReceive - totalOwed;
+
+            // If user left the group, hide them if their balance is perfectly 0
+            if (!member.getStatus().equals("active") && Math.abs(netBalance) < 0.01) {
+                continue;
+            }
 
             // Get user details
             User user = userRepository.findById(userId).orElse(null);
@@ -214,6 +222,22 @@ public class SettlementService {
         // Get user details
         User fromUser = userRepository.findById(request.getFromUserId()).orElse(null);
         User toUser = userRepository.findById(request.getToUserId()).orElse(null);
+
+        // Send email to the person receiving the money
+        if (toUser != null && fromUser != null) {
+            Group group = groupRepository.findById(request.getGroupId()).orElse(null);
+            String groupName = group != null ? group.getName() : "Unknown Group";
+            emailService.sendSettlementEmail(
+                toUser.getEmail(), 
+                toUser.getUsername(), 
+                groupName, 
+                savedSettlement.getAmount(), 
+                savedSettlement.getCurrency(), 
+                fromUser.getUsername(), 
+                toUser.getUsername(), 
+                request.getGroupId()
+            );
+        }
 
         return new SettlementResponse(
                 savedSettlement.getId(),

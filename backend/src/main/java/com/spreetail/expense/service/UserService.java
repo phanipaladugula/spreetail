@@ -1,10 +1,9 @@
 package com.spreetail.expense.service;
 
-import com.spreetail.expense.dto.LoginResponse;
-import com.spreetail.expense.dto.UserRegisterRequest;
-import com.spreetail.expense.dto.UserResponse;
+import com.spreetail.expense.dto.*;
 import com.spreetail.expense.model.User;
 import com.spreetail.expense.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +17,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
     /**
@@ -44,9 +45,22 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        
+        // OTP logic
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setStatus("PENDING");
+        user.setOtp(otp);
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
 
         // Save user to database
         User savedUser = userRepository.save(user);
+        
+        // Send email asynchronously
+        try {
+            emailService.sendRegistrationOtpEmail(user.getEmail(), user.getUsername(), otp);
+        } catch (Exception e) {
+            // Log error but don't fail registration
+        }
 
         // Convert to response DTO
         return convertToUserResponse(savedUser);
@@ -59,6 +73,11 @@ public class UserService {
         // Find user by email
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                
+        // Check if user is pending verification
+        if ("PENDING".equals(user.getStatus())) {
+            throw new RuntimeException("Please verify your email using the OTP sent to you");
+        }
 
         // Check password
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -70,6 +89,34 @@ public class UserService {
 
         // Return login response
         return new LoginResponse(token, convertToUserResponse(user));
+    }
+
+    /**
+     * Verify OTP
+     */
+    public UserResponse verifyOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+        if (!"PENDING".equals(user.getStatus())) {
+            throw new RuntimeException("User is already verified");
+        }
+        
+        if (user.getOtp() == null || !user.getOtp().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+        
+        if (user.getOtpExpiry() != null && user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP has expired. Please register again.");
+        }
+        
+        // Mark as verified
+        user.setStatus("ACTIVE");
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+        
+        return convertToUserResponse(user);
     }
 
     /**
@@ -184,5 +231,23 @@ public class UserService {
      */
     public String getUserEmailFromToken(String token) {
         return jwtService.extractEmail(token);
+    }
+
+    /**
+     * Search users by email or username
+     * @param query search query
+     * @return List of matched UserResponse
+     */
+    public java.util.List<UserResponse> searchUsers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        String searchTerm = query.trim();
+        java.util.List<User> users = userRepository.findByEmailContainingIgnoreCaseOrUsernameContainingIgnoreCase(searchTerm, searchTerm);
+        return users.stream().map(u -> new UserResponse(
+                u.getId(),
+                u.getUsername(),
+                u.getEmail()
+        )).collect(java.util.stream.Collectors.toList());
     }
 }

@@ -23,15 +23,18 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
+    private final EmailService emailService;
 
     public GroupService(GroupRepository groupRepository,
                          GroupMemberRepository groupMemberRepository,
                          UserRepository userRepository,
-                         ExpenseRepository expenseRepository) {
+                         ExpenseRepository expenseRepository,
+                         EmailService emailService) {
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
         this.expenseRepository = expenseRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -72,6 +75,9 @@ public class GroupService {
                 addMemberById(savedGroup.getId(), memberId);
             }
         }
+
+        // Send group creation email
+        emailService.sendGroupCreationEmail(createdBy.getEmail(), createdBy.getUsername(), savedGroup.getName(), savedGroup.getId());
 
         return convertToGroupResponse(savedGroup);
     }
@@ -134,6 +140,9 @@ public class GroupService {
         member.setStatus("active");
         member = groupMemberRepository.save(member);
 
+        // Send email
+        emailService.sendMemberAddedEmail(user.getEmail(), user.getUsername(), group.getName(), group.getId());
+
         return new GroupMemberResponse(
                 member.getId(),
                 member.getUserId(),
@@ -157,7 +166,35 @@ public class GroupService {
     }
 
     /**
-     * Get all groups for a user
+     * Leave a group
+     * @param groupId ID of the group
+     * @param userId ID of the user leaving
+     * @throws RuntimeException if group or user not found, or not a member
+     */
+    @Transactional
+    public void leaveGroup(Long groupId, Long userId) {
+        // Find group
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        // Check if user is a member
+        GroupMember member = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(() -> new RuntimeException("User is not a member of this group"));
+
+        // Check if already left
+        if ("inactive".equals(member.getStatus())) {
+            throw new RuntimeException("User has already left this group");
+        }
+
+        // Mark as inactive and record leave time
+        member.setStatus("inactive");
+        member.setLeftAt(java.time.LocalDateTime.now());
+        
+        groupMemberRepository.save(member);
+    }
+
+    /**
+     * Get user details for a member
      * @param userId ID of the user
      * @return List of GroupResponse objects
      */
@@ -200,6 +237,11 @@ public class GroupService {
         member.setUserId(request.getUserId());
         member.setStatus("active");
         groupMemberRepository.save(member);
+
+        User user = userRepository.findById(request.getUserId()).orElse(null);
+        if (user != null) {
+            emailService.sendMemberAddedEmail(user.getEmail(), user.getUsername(), group.getName(), group.getId());
+        }
 
         return convertToGroupResponse(group);
     }
@@ -272,7 +314,9 @@ public class GroupService {
         }
 
         // Delete all group members
-        groupMemberRepository.deleteByGroupId(groupId);
+        for (GroupMember member : members) {
+            groupMemberRepository.delete(member);
+        }
 
         // Delete group
         groupRepository.deleteById(groupId);
@@ -306,7 +350,7 @@ public class GroupService {
      * @param group The group entity
      * @return GroupResponse DTO with members list
      */
-    private GroupResponse convertToGroupResponse(Group group) {
+    public GroupResponse convertToGroupResponse(Group group) {
         // Get all members
         List<GroupMember> members = groupMemberRepository.findByGroupId(group.getId());
         List<GroupMemberResponse> memberResponses = new ArrayList<>();

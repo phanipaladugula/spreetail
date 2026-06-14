@@ -31,11 +31,25 @@ public class GroupMember {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(nullable = false, length = 20)
+    private String status = "active"; // active, inactive
+
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;
 
-    @Column(length = 20)
-    private String status;
+    @Column(name = "left_at")
+    private LocalDateTime leftAt;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (joinedAt == null) {
+            joinedAt = createdAt;
+        }
+    }
 
     public GroupMember(Group group, Long userId) {
         this.group = group;

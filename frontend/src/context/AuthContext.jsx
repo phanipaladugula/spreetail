@@ -1,99 +1,54 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getMe } from '../api/auth'
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(null)
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const loadUser = useCallback(async () => {
+    const token = localStorage.getItem('spreetail_token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+    try {
+      const res = await getMe()
+      setUser(res.data)
+    } catch {
+      localStorage.removeItem('spreetail_token')
+      localStorage.removeItem('spreetail_user')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUser(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
+    loadUser()
+  }, [loadUser])
 
-  const fetchUser = async (token) => {
-    try {
-      const response = await fetch('http://localhost:8080/api/auth/me', {
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data);
-      } else {
-        localStorage.removeItem('token');
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loginUser = (token, userData) => {
+    localStorage.setItem('spreetail_token', token)
+    localStorage.setItem('spreetail_user', JSON.stringify(userData))
+    setUser(userData)
+  }
 
-  const login = async (email, password) => {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      localStorage.setItem('token', data.token);
-      setUser(data.user);
-      return { success: true };
-    } else {
-      return { success: false, error: data };
-    }
-  };
-
-  const register = async (username, email, password) => {
-    const response = await fetch('http://localhost:8080/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username, email, password })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      return { success: true };
-    } else {
-      return { success: false, error: data };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
-
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout
-  };
+  const logoutUser = () => {
+    localStorage.removeItem('spreetail_token')
+    localStorage.removeItem('spreetail_user')
+    setUser(null)
+  }
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, loading, loginUser, logoutUser }}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be inside AuthProvider')
+  return ctx
+}

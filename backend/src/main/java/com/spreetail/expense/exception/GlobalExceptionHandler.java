@@ -4,22 +4,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.MethodArgumentTypeNotValidException;
-import org.springframework.web.bind.MissingServletRequestPartException;
-import org.springframework.web.bind.NoHandlerFoundException;
 import org.springframework.web.bind.ServletRequestBindingException;
-import org.springframework.web.method.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.MissingServletRequestPartException;
-import org.springframework.web.bind.*;
-import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.method.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -89,21 +82,42 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle method argument not valid
+     * Handle validation errors
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", new Date().getTime());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", "Validation Failed");
+
+        List<String> errors = new ArrayList<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.add(error.getField() + ": " + error.getDefaultMessage());
+        }
+        response.put("message", "Validation failed: " + String.join(", ", errors));
+        response.put("errors", errors);
+        response.put("path", "");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /**
+     * Handle method argument type mismatch
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleMethodTypeMismatch(MethodArgumentTypeMismatchException ex) {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", new Date().getTime());
         response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Method Not Allowed");
-        response.put("message", "Request method '" + ex.getMethod() + "' not supported");
-        response.put("path", ex.getServletPath());
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+        response.put("error", "Type Mismatch");
+        response.put("message", "Parameter '" + ex.getName() + "' should be of type " + ex.getRequiredType().getSimpleName());
+        response.put("path", "");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     /**
-     * Handle missing servlet request parameter
+     * Handle missing request parameter
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<Map<String, Object>> handleMissingParameter(MissingServletRequestParameterException ex) {
@@ -112,21 +126,7 @@ public class GlobalExceptionHandler {
         response.put("status", HttpStatus.BAD_REQUEST.value());
         response.put("error", "Bad Request");
         response.put("message", "Required parameter '" + ex.getParameterName() + "' is missing");
-        response.put("path", ex.getServletPath());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
-    /**
-     * Handle missing servlet request part
-     */
-    @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingPart(MissingServletRequestPartException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", new Date().getTime());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Bad Request");
-        response.put("message", "Required part '" + ex.getRequestPartName() + "' is missing");
-        response.put("path", ex.getServletPath());
+        response.put("path", "");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
         response.put("status", HttpStatus.BAD_REQUEST.value());
         response.put("error", "Bad Request");
         response.put("message", "Request binding error: " + ex.getMessage());
-        response.put("path", ex.getServletPath());
+        response.put("path", "");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
@@ -154,7 +154,7 @@ public class GlobalExceptionHandler {
         response.put("status", HttpStatus.NOT_FOUND.value());
         response.put("error", "Not Found");
         response.put("message", "The requested resource was not found on the server");
-        response.put("path", ex.getRequestURI());
+        response.put("path", ex.getRequestURL());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 

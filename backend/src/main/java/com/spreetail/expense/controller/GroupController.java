@@ -1,6 +1,8 @@
 package com.spreetail.expense.controller;
 
 import com.spreetail.expense.dto.*;
+import com.spreetail.expense.model.Group;
+import com.spreetail.expense.repository.GroupRepository;
 import com.spreetail.expense.service.GroupService;
 import com.spreetail.expense.service.UserService;
 import jakarta.validation.Valid;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +29,12 @@ public class GroupController {
 
     private final GroupService groupService;
     private final UserService userService;
+    private final GroupRepository groupRepository;
 
-    public GroupController(GroupService groupService, UserService userService) {
+    public GroupController(GroupService groupService, UserService userService, GroupRepository groupRepository) {
         this.groupService = groupService;
         this.userService = userService;
+        this.groupRepository = groupRepository;
     }
 
     /**
@@ -135,7 +140,8 @@ public class GroupController {
                 // Get paginated groups
                 int skip = page * size;
                 totalPages = (int) Math.ceil((double) totalElements / size);
-                groups = groupRepository.findAll(PageRequest.of(page, size));
+                Page<Group> groupPage = groupRepository.findAll(PageRequest.of(page, size));
+                groups = groupPage.getContent();
                 first = page == 0;
                 last = (page + 1) >= totalPages;
             }
@@ -276,6 +282,26 @@ public class GroupController {
             GroupResponse response = groupService.removeMember(id, userId);
             return ResponseEntity.ok(createSuccessResponse(
                 "Member removed successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Leave a group voluntarily
+     * POST /api/groups/{id}/leave
+     */
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<?> leaveGroup(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Extract token and user email
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+            UserResponse user = userService.getUserByEmail(email);
+
+            groupService.leaveGroup(id, user.getId());
+            return ResponseEntity.ok(createSuccessResponse("You have successfully left the group", null));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(createErrorResponse(e.getMessage()));

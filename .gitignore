@@ -1,0 +1,11 @@
+# Node 
+node_modules/ 
+**/node_modules/ 
+dist/ 
+# Java 
+target/ 
+**/target/ 
+*.jar 
+# IDEs 
+.idea/ 
+.vscode/ 

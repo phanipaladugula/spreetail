@@ -1,66 +1,77 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import GroupDetails from './pages/GroupDetails';
-import Friends from './pages/Friends';
-import Activity from './pages/Activity';
-import Notifications from './pages/Notifications';
-import Currencies from './pages/Currencies';
-import Categories from './pages/Categories';
-import Receipts from './pages/Receipts';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import LoadingSpinner from './components/LoadingSpinner'
+
+// Pages
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
+import Groups from './pages/Groups'
+import GroupDetail from './pages/GroupDetail'
+import Expenses from './pages/Expenses'
+import ImportCSV from './pages/ImportCSV'
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingSpinner fullPage />
+  if (!user) return <Navigate to="/login" replace />
+  return children
 }
 
 function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  return children;
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingSpinner fullPage />
+  if (user) return <Navigate to="/dashboard" replace />
+  return children
 }
 
-function App() {
+function AppRoutes() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/group/:groupId" element={<ProtectedRoute><GroupDetails /></ProtectedRoute>} />
-          <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-          <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="/currencies" element={<ProtectedRoute><Currencies /></ProtectedRoute>} />
-          <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
-          <Route path="/receipts" element={<ProtectedRoute><Receipts /></ProtectedRoute>} />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  );
+    <Routes>
+      {/* Public */}
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+
+      {/* Protected */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+      <Route path="/groups/:id" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
+      <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+      <Route path="/import" element={<ProtectedRoute><ImportCSV /></ProtectedRoute>} />
+
+      {/* Default */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  )
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1c2529',
+              color: '#f0f4f5',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '12px',
+              fontSize: '0.875rem',
+              fontFamily: "'Onest', 'Inter', sans-serif",
+            },
+            success: {
+              iconTheme: { primary: '#09cca9', secondary: '#0e1214' },
+            },
+            error: {
+              iconTheme: { primary: '#ef4444', secondary: '#fff' },
+            },
+          }}
+        />
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+  )
+}

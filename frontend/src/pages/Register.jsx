@@ -1,129 +1,173 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
-import './Login.css';
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
+import { register, verifyOtp } from '../api/auth'
+import SpreetailLogo from '../components/SpreetailLogo'
+import toast from 'react-hot-toast'
 
-function Register() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const { register } = useAuth();
-  const navigate = useNavigate();
+export default function Register() {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [form, setForm] = useState({ username: '', email: '', password: '', otp: '' })
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.username || !form.email || !form.password) return toast.error('Fill in all fields')
+    if (form.password.length < 6) return toast.error('Password must be at least 6 characters')
+    setLoading(true)
+    try {
+      await register({ username: form.username, email: form.email, password: form.password })
+      toast.success('Registration successful! Please check your email for the OTP.')
+      setStep(2)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Registration failed')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.otp || form.otp.length !== 6) return toast.error('Please enter a valid 6-digit OTP')
+    setLoading(true)
+    try {
+      await verifyOtp({ email: form.email, otp: form.otp })
+      toast.success('Account verified! Please sign in.')
+      navigate('/login')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Verification failed')
+    } finally {
+      setLoading(false)
     }
-
-    const result = await register(username, email, password);
-
-    if (result.success) {
-      navigate('/login');
-    } else {
-      setError(typeof result.error === 'string' ? result.error : 'Registration failed. Please try again.');
-    }
-  };
+  }
 
   return (
-    <div className="auth-container">
-      <div className="auth-background"></div>
+    <div className="auth-page">
+      <div className="auth-bg" />
+      <div className="auth-dots" />
+
       <div className="auth-card">
-        <div className="auth-logo">
-          <Logo size="large" />
+        <div className="auth-logo-wrap">
+          <SpreetailLogo height={26} color="#09cca9" />
         </div>
-        <h2>Create Account</h2>
-        <p className="auth-subtitle">Start splitting expenses with Spreetail</p>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="johndoe"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-            <small className="form-hint">Must be at least 6 characters</small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-block">
-            Create Account
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Already have an account? <a href="/login">Sign In</a>
+        <h1 className="auth-heading">{step === 1 ? 'Create an account' : 'Verify Email'}</h1>
+        <p className="auth-subheading">
+          {step === 1 ? 'Start splitting expenses with your group' : `Enter the 6-digit OTP sent to ${form.email}`}
         </p>
 
-        <div className="auth-features">
-          <div className="feature">
-            <div className="feature-icon">💰</div>
-            <div className="feature-text">Track expenses</div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">⚖️</div>
-            <div className="feature-text">Split bills easily</div>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">👥</div>
-            <div className="feature-text">Manage groups</div>
-          </div>
-        </div>
+        {step === 1 ? (
+          <form className="auth-form" onSubmit={handleRegisterSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-username">Username</label>
+              <input
+                id="reg-username"
+                className="form-input"
+                type="text"
+                placeholder="johndoe"
+                autoComplete="username"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                autoFocus
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-email">Email</label>
+              <input
+                id="reg-email"
+                className="form-input"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-password">Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="reg-password"
+                  className="form-input"
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="Min. 6 characters"
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  style={{ paddingRight: '2.75rem' }}
+                />
+                <button
+                  type="button"
+                  id="toggle-reg-password"
+                  onClick={() => setShowPass((v) => !v)}
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text-dim)',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    display: 'flex',
+                  }}
+                >
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              id="register-submit"
+              type="submit"
+              className="btn btn-primary btn-full btn-lg"
+              disabled={loading}
+              style={{ marginTop: '0.5rem' }}
+            >
+              {loading ? <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2.5 }} /> : null}
+              Create Account
+            </button>
+          </form>
+        ) : (
+          <form className="auth-form" onSubmit={handleOtpSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="reg-otp">6-Digit Code</label>
+              <input
+                id="reg-otp"
+                className="form-input"
+                type="text"
+                placeholder="123456"
+                maxLength={6}
+                value={form.otp}
+                onChange={(e) => setForm({ ...form, otp: e.target.value })}
+                autoFocus
+                style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem', fontWeight: 'bold' }}
+              />
+            </div>
+
+            <button
+              id="verify-submit"
+              type="submit"
+              className="btn btn-primary btn-full btn-lg"
+              disabled={loading || form.otp.length !== 6}
+              style={{ marginTop: '0.5rem' }}
+            >
+              {loading ? <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2.5 }} /> : null}
+              Verify Account
+            </button>
+          </form>
+        )}
+
+        <p className="auth-footer">
+          Already have an account?{' '}
+          <Link to="/login" id="go-to-login">Sign in</Link>
+        </p>
       </div>
     </div>
-  );
+  )
 }
-
-export default Register;

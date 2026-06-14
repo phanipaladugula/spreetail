@@ -24,7 +24,7 @@ public class SettlementController {
         this.settlementService = settlementService;
         this.userService = userService;
     }
-
+    
     /**
      * Get balances for a group
      * GET /api/settlements/balances/{groupId}
@@ -35,7 +35,7 @@ public class SettlementController {
             List<BalanceResponse> responses = settlementService.calculateGroupBalances(groupId);
             return ResponseEntity.ok(responses);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -49,7 +49,7 @@ public class SettlementController {
             List<SettlementResponse> responses = settlementService.getSettlementSuggestions(groupId);
             return ResponseEntity.ok(responses);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -63,7 +63,7 @@ public class SettlementController {
             SettlementResponse response = settlementService.recordSettlement(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -77,7 +77,7 @@ public class SettlementController {
             List<SettlementResponse> responses = settlementService.getGroupSettlements(groupId);
             return ResponseEntity.ok(responses);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 }

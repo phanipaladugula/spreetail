@@ -46,7 +46,7 @@ public class ExpenseController {
             ExpenseResponse response = expenseService.createExpense(request, user.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

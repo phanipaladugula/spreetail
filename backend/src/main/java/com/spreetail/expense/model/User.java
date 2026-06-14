@@ -31,6 +31,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE"; // PENDING, ACTIVE
+
+    @Column(length = 6)
+    private String otp;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
