@@ -89,6 +89,10 @@ public class GroupService {
      * @throws RuntimeException if group or user not found, or already a member
      */
     private void addMemberById(Long groupId, Long memberId) {
+        // Validate group exists
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
         // Check if user exists
         if (!userRepository.existsById(memberId)) {
             throw new RuntimeException("User with ID " + memberId + " not found");
@@ -100,10 +104,7 @@ public class GroupService {
         }
 
         // Add member
-        GroupMember member = new GroupMember();
-        member.setGroupId(groupId);
-        member.setUserId(memberId);
-        member.setStatus("active");
+        GroupMember member = new GroupMember(group, memberId);
         groupMemberRepository.save(member);
     }
 
@@ -135,7 +136,7 @@ public class GroupService {
 
         // Add member
         GroupMember member = new GroupMember();
-        member.setGroupId(groupId);
+        member.setGroup(group);
         member.setUserId(user.getId());
         member.setStatus("active");
         member = groupMemberRepository.save(member);

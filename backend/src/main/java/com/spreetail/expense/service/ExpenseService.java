@@ -50,8 +50,11 @@ public class ExpenseService {
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
         // Validate user is member of group
-        if (!groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), actualPaidByUserId).isPresent()) {
-            throw new RuntimeException("User is not a member of this group");
+        GroupMember paidByMember = groupMemberRepository.findByGroupIdAndUserId(request.getGroupId(), actualPaidByUserId)
+                .orElseThrow(() -> new RuntimeException("User is not a member of this group"));
+
+        if (!"active".equals(paidByMember.getStatus())) {
+            throw new RuntimeException("Inactive members cannot create new expenses in this group");
         }
 
         // Validate split type

@@ -247,7 +247,8 @@ public class UserService {
         return users.stream().map(u -> new UserResponse(
                 u.getId(),
                 u.getUsername(),
-                u.getEmail()
+                u.getEmail(),
+                u.getCreatedAt()
         )).collect(java.util.stream.Collectors.toList());
     }
 }
