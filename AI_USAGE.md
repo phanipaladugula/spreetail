@@ -280,6 +280,33 @@ public List<Settlement> calculateSettlements(List<Balance> balances) {
 
 ---
 
+### Case #6: Hardcoded JAR Name in Dockerfile Causing Production Crash
+
+**What AI Produced**:
+```dockerfile
+# WRONG - AI produced this
+# Stage 2: Run
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/expense-sharing-1.0.0.jar app.jar
+```
+
+**The Bug**: The AI assumed the compiled JAR file was named exactly `expense-sharing-1.0.0.jar`. However, the artifact name might change (e.g. `expense-1.0.0.jar` or `spreetail-backend-0.0.1-SNAPSHOT.jar`), causing the `COPY` command to fail instantly during the Railway production build with a "File Not Found" error.
+
+**How I Caught It**:
+1. Reviewed the Dockerfile logic before deploying to Railway.
+2. Realized that relying on an exact artifact version and name is fragile.
+
+**What I Changed**:
+```dockerfile
+# FIXED - Using wildcard target/*.jar so it never fails on naming conventions
+COPY --from=builder /app/target/*.jar app.jar
+```
+
+**Lesson Learned**: Dockerfiles should be resilient to build artifact version changes. The AI hardcoded a specific version string which makes CI/CD pipelines fragile.
+
+---
+
 ## Pattern of AI Mistakes
 
 ### Common Themes
