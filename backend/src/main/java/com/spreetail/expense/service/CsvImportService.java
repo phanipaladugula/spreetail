@@ -1,13 +1,8 @@
 package com.spreetail.expense.service;
 
-import com.spreetail.expense.dto.CreateExpenseRequest;
-import com.spreetail.expense.dto.CsvImportRequest;
-import com.spreetail.expense.dto.ExpenseResponse;
-import com.spreetail.expense.model.Expense;
-import com.spreetail.expense.model.GroupMember;
-import com.spreetail.expense.model.User;
-import com.spreetail.expense.repository.GroupMemberRepository;
-import com.spreetail.expense.repository.UserRepository;
+import com.spreetail.expense.dto.*;
+import com.spreetail.expense.model.*;
+import com.spreetail.expense.repository.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -17,43 +12,175 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Service class for importing expenses from CSV with anomaly detection
+ * Handles 12+ data problems as required by the assignment
+ */
 @Service
 public class CsvImportService {
 
     private final UserRepository userRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final ExpenseService expenseService;
+    private final ExpenseRepository expenseRepository;
+
+    // Settlement keywords to detect settlements logged as expenses
+    private static final String[] SETTLEMENT_KEYWORDS = {
+            "settlement", "paid", "settled", "payment", "transfer", "repayment",
+            "sent to", "received from", "gave", "took", "return", "payback"
+    };
+
+    // Valid split types
+    private static final Set<String> VALID_SPLIT_TYPES = Set.of("equal", "unequal", "percentage", "share");
+
+    // Valid currencies
+    private static final Set<String> VALID_CURRENCIES = Set.of(
+            "INR", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SGD"
+    );
 
     public CsvImportService(UserRepository userRepository,
                             GroupMemberRepository groupMemberRepository,
-                            ExpenseService expenseService) {
+                            ExpenseService expenseService,
+                            ExpenseRepository expenseRepository) {
         this.userRepository = userRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.expenseService = expenseService;
+        this.expenseRepository = expenseRepository;
     }
 
-    public List<ExpenseResponse> importExpensesFromCsv(MultipartFile file, Long groupId, Long currentUserId) throws Exception {
-        List<CreateExpenseRequest> expenses = parseCsvFile(file, groupId);
-
+    /**
+     * Import expenses from CSV file with full anomaly detection and reporting
+     */
+    public ImportReportResponse importExpensesFromCsv(MultipartFile file, Long groupId, Long currentUserId) {
+        List<CsvAnomaly> anomalies = new ArrayList<>();
         List<ExpenseResponse> importedExpenses = new ArrayList<>();
-        for (CreateExpenseRequest expenseRequest : expenses) {
-            try {
-                ExpenseResponse response = expenseService.createExpense(expenseRequest, currentUserId);
-                importedExpenses.add(response);
-            } catch (Exception e) {
-                System.err.println("Failed to import expense: " + expenseRequest.getDescription() + " - " + e.getMessage());
+        int totalRowsProcessed = 0;
+        int successfullyImported = 0;
+        int skippedRows = 0;
+
+        try {
+            List<CreateExpenseRequest> expenseRequests = parseCsvFile(file, groupId, anomalies);
+
+            // Check for duplicates before importing
+            detectDuplicateExpenses(expenseRequests, groupId, anomalies);
+
+            totalRowsProcessed = expenseRequests.size();
+
+            for (int i = 0; i < expenseRequests.size(); i++) {
+                CreateExpenseRequest request = expenseRequests.get(i);
+                int rowNum = i + 2; // +2 because of header and 0-index
+
+                try {
+                    // Check if this row has been flagged to skip
+                    boolean shouldSkip = anomalies.stream()
+                            .anyMatch(a -> a.getRowNumber() == rowNum &&
+                                       a.getActionTaken().equals("SKIPPED"));
+
+                    if (shouldSkip) {
+                        skippedRows++;
+                        continue;
+                    }
+
+                    ExpenseResponse response = expenseService.createExpense(request, currentUserId);
+                    importedExpenses.add(response);
+                    successfullyImported++;
+
+                } catch (Exception e) {
+                    skippedRows++;
+                    anomalies.add(new CsvAnomaly(
+                            rowNum,
+                            "IMPORT_ERROR",
+                            "Failed to import expense: " + e.getMessage(),
+                            "N/A",
+                            request.getDescription(),
+                            "SKIPPED",
+                            "Errors during import cause row to be skipped"
+                    ));
+                }
             }
+
+        } catch (Exception e) {
+            return new ImportReportResponse(
+                    totalRowsProcessed,
+                    successfullyImported,
+                    skippedRows,
+                    anomalies.size(),
+                    importedExpenses,
+                    anomalies,
+                    "error",
+                    "CSV parsing failed: " + e.getMessage()
+            );
         }
 
-        return importedExpenses;
+        String status = successfullyImported > 0 ? "success" : (anomalies.isEmpty() ? "warning" : "error");
+        String message = String.format("Processed %d rows: %d imported, %d skipped, %d anomalies detected",
+                totalRowsProcessed, successfullyImported, skippedRows, anomalies.size());
+
+        return new ImportReportResponse(
+                totalRowsProcessed,
+                successfullyImported,
+                skippedRows,
+                anomalies.size(),
+                importedExpenses,
+                anomalies,
+                status,
+                message
+        );
     }
 
-    private List<CreateExpenseRequest> parseCsvFile(MultipartFile file, Long groupId) throws Exception {
+    /**
+     * Preview CSV import without actually importing (for user approval)
+     */
+    public ImportReportResponse previewCsvImport(MultipartFile file, Long groupId) {
+        List<CsvAnomaly> anomalies = new ArrayList<>();
+        List<ExpenseResponse> previewExpenses = new ArrayList<>();
+
+        try {
+            List<CreateExpenseRequest> expenseRequests = parseCsvFile(file, groupId, anomalies);
+            detectDuplicateExpenses(expenseRequests, groupId, anomalies);
+
+            // Create preview responses without actually saving
+            for (int i = 0; i < expenseRequests.size(); i++) {
+                CreateExpenseRequest request = expenseRequests.get(i);
+                int rowNum = i + 2;
+
+                boolean willSkip = anomalies.stream()
+                        .anyMatch(a -> a.getRowNumber() == rowNum && a.getActionTaken().equals("SKIPPED"));
+
+                if (!willSkip) {
+                    // Create a preview response
+                    ExpenseResponse preview = createPreviewResponse(request, groupId, rowNum);
+                    previewExpenses.add(preview);
+                }
+            }
+
+        } catch (Exception e) {
+            return new ImportReportResponse(
+                    0, 0, 0, anomalies.size(),
+                    previewExpenses, anomalies, "error",
+                    "Preview failed: " + e.getMessage()
+            );
+        }
+
+        return new ImportReportResponse(
+                expenseRequests.size(), 0, 0, anomalies.size(),
+                previewExpenses, anomalies, "preview",
+                "Preview mode - no expenses were imported"
+        );
+    }
+
+    /**
+     * Parse CSV file and detect anomalies
+     */
+    private List<CreateExpenseRequest> parseCsvFile(MultipartFile file, Long groupId, List<CsvAnomaly> anomalies) throws Exception {
         List<CreateExpenseRequest> expenses = new ArrayList<>();
+        Set<String> seenSignatures = new HashSet<>();
 
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
              CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT
@@ -61,52 +188,349 @@ public class CsvImportService {
                      .withIgnoreHeaderCase()
                      .withTrim())) {
 
+            int rowNum = 0;
             for (CSVRecord record : csvParser) {
+                rowNum++;
+                int actualRow = rowNum + 1; // Account for header
+
                 CreateExpenseRequest request = new CreateExpenseRequest();
+                List<CsvAnomaly> rowAnomalies = new ArrayList<>();
 
-                // Parse fields
-                request.setGroupId(groupId);
-                request.setDescription(getFieldValue(record, "description"));
+                try {
+                    // Parse required fields
+                    String description = getFieldValue(record, "description");
 
-                // Parse amount
-                String amountStr = getFieldValue(record, "amount").replace(",", "");
-                if (amountStr != null && !amountStr.isEmpty()) {
-                    request.setAmount(Double.parseDouble(amountStr));
+                    // Anomaly 1: Empty required fields
+                    if (description == null || description.isEmpty()) {
+                        rowAnomalies.add(new CsvAnomaly(
+                                actualRow, "EMPTY_FIELD",
+                                "Description is empty", "description", "",
+                                "SKIPPED", "Empty required fields cause row to be skipped"
+                        ));
+                        continue;
+                    }
+
+                    request.setGroupId(groupId);
+                    request.setDescription(description);
+
+                    // Parse amount
+                    String amountStr = getFieldValue(record, "amount").replace(",", "");
+                    if (amountStr != null && !amountStr.isEmpty()) {
+                        try {
+                            double amount = Double.parseDouble(amountStr);
+                            request.setAmount(amount);
+
+                            // Anomaly 2: Zero amount
+                            if (amount == 0.0) {
+                                rowAnomalies.add(new CsvAnomaly(
+                                        actualRow, "ZERO_AMOUNT",
+                                        "Amount is zero", "amount", "0",
+                                        "SKIPPED", "Zero amounts are invalid expenses"
+                                ));
+                                continue;
+                            }
+
+                            // Anomaly 3: Negative amount (treat as refund)
+                            if (amount < 0) {
+                                rowAnomalies.add(new CsvAnomaly(
+                                        actualRow, "NEGATIVE_AMOUNT",
+                                        "Negative amount - treating as refund", "amount",
+                                        String.valueOf(amount),
+                                        "REFUND_SPLIT_REVERSED",
+                                        "Negative amounts are treated as refunds - split directions are reversed"
+                                ));
+                                request.setAmount(Math.abs(amount));
+                            }
+
+                        } catch (NumberFormatException e) {
+                            rowAnomalies.add(new CsvAnomaly(
+                                    actualRow, "INVALID_AMOUNT",
+                                    "Invalid amount format", "amount", amountStr,
+                                    "SKIPPED", "Invalid numeric amounts cause row to be skipped"
+                            ));
+                            continue;
+                        }
+                    }
+
+                    // Parse currency
+                    String currency = getFieldValue(record, "currency");
+                    if (currency != null && !currency.isEmpty()) {
+                        // Anomaly 4: Invalid currency
+                        if (!VALID_CURRENCIES.contains(currency.toUpperCase())) {
+                            rowAnomalies.add(new CsvAnomaly(
+                                    actualRow, "INVALID_CURRENCY",
+                                    "Unknown currency code", "currency", currency,
+                                    "DEFAULT_TO_INR",
+                                    "Unknown currencies default to INR"
+                            ));
+                            currency = "INR";
+                        }
+                    }
+                    request.setCurrency(currency != null && !currency.isEmpty() ? currency : "INR");
+
+                    // Parse split type
+                    String splitType = getFieldValue(record, "split_type");
+                    if (splitType != null && !splitType.isEmpty()) {
+                        // Anomaly 5: Invalid split type
+                        if (!VALID_SPLIT_TYPES.contains(splitType.toLowerCase())) {
+                            rowAnomalies.add(new CsvAnomaly(
+                                    actualRow, "INVALID_SPLIT_TYPE",
+                                    "Unknown split type", "split_type", splitType,
+                                    "DEFAULT_TO_EQUAL",
+                                    "Unknown split types default to equal split"
+                            ));
+                            splitType = "equal";
+                        }
+                    }
+                    request.setSplitType(splitType != null && !splitType.isEmpty() ? splitType : "equal");
+
+                    // Notes
+                    String notes = getFieldValue(record, "notes");
+                    request.setNotes(notes);
+
+                    // Anomaly 6: Settlement logged as expense
+                    if (isSettlement(description, notes)) {
+                        rowAnomalies.add(new CsvAnomaly(
+                                actualRow, "SETTLEMENT_AS_EXPENSE",
+                                "Description or notes indicate this is a settlement, not an expense",
+                                "description", description,
+                                "SKIPPED",
+                                "Settlements should be recorded via settlement endpoint, not as expenses"
+                        ));
+                        continue;
+                    }
+
+                    // Get paid by user
+                    String paidByName = getFieldValue(record, "paid_by");
+                    if (paidByName != null && !paidByName.isEmpty()) {
+                        Long paidByUserId = findUserIdByName(paidByName);
+                        if (paidByUserId == null) {
+                            // Anomaly 7: User not found
+                            rowAnomalies.add(new CsvAnomaly(
+                                    actualRow, "USER_NOT_FOUND",
+                                    "Paid by user not found in system", "paid_by", paidByName,
+                                    "SKIPPED", "Unknown users cause row to be skipped"
+                            ));
+                            continue;
+                        }
+                        request.setPaidByUserId(paidByUserId);
+                    }
+
+                    // Parse split with
+                    String splitWithStr = getFieldValue(record, "split_with");
+                    List<Long> splitWith = parseUserList(splitWithStr);
+                    if (splitWith.isEmpty()) {
+                        // Anomaly 8: No users to split with
+                        rowAnomalies.add(new CsvAnomaly(
+                                actualRow, "NO_SPLIT_USERS",
+                                "No valid users to split expense with", "split_with", splitWithStr,
+                                "SKIPPED", "Expenses must be split with at least one user"
+                        ));
+                        continue;
+                    }
+
+                    // Anomaly 9: Users who moved out (time-based filtering)
+                    // Check if any users in split_with have left the group
+                    checkMembershipValidity(splitWith, groupId, rowAnomalies, actualRow);
+
+                    request.setSplitWith(splitWith);
+
+                    // Parse split details
+                    String splitDetailsRaw = getFieldValue(record, "split_details");
+                    Map<String, Double> splitDetails = parseSplitDetails(splitDetailsRaw);
+                    request.setSplitDetails(splitDetails);
+
+                    // Anomaly 10: Split sum mismatch
+                    if (!splitType.equals("equal") && !splitDetails.isEmpty()) {
+                        validateSplitSum(request, splitWith, rowAnomalies, actualRow);
+                    }
+
+                    // Check for duplicate signature in this CSV (Anomaly 11)
+                    String signature = createExpenseSignature(request);
+                    if (seenSignatures.contains(signature)) {
+                        rowAnomalies.add(new CsvAnomaly(
+                                actualRow, "DUPLICATE_IN_CSV",
+                                "Duplicate entry within the same CSV file", "N/A", description,
+                                "SKIPPED", "Exact duplicates within CSV are skipped"
+                        ));
+                        continue;
+                    }
+                    seenSignatures.add(signature);
+
+                    // If no critical anomalies, add to expenses list
+                    boolean hasCriticalAnomaly = rowAnomalies.stream()
+                            .anyMatch(a -> a.getActionTaken().equals("SKIPPED"));
+
+                    if (!hasCriticalAnomaly) {
+                        expenses.add(request);
+                    }
+
+                    // Add all anomalies to the main list
+                    anomalies.addAll(rowAnomalies);
+
+                } catch (Exception e) {
+                    anomalies.add(new CsvAnomaly(
+                            actualRow, "PARSING_ERROR",
+                            "Error parsing row: " + e.getMessage(), "N/A", "",
+                            "SKIPPED", "Parsing errors cause row to be skipped"
+                    ));
                 }
-
-                // Currency
-                String currency = getFieldValue(record, "currency");
-                request.setCurrency(currency != null && !currency.isEmpty() ? currency : "INR");
-
-                // Split type
-                String splitType = getFieldValue(record, "split_type");
-                request.setSplitType(splitType != null && !splitType.isEmpty() ? splitType : "equal");
-
-                // Notes
-                request.setNotes(getFieldValue(record, "notes"));
-
-                // Get paid by user
-                String paidByName = getFieldValue(record, "paid_by");
-                if (paidByName != null && !paidByName.isEmpty()) {
-                    Long paidByUserId = findUserIdByName(paidByName);
-                    request.setPaidByUserId(paidByUserId);
-                }
-
-                // Parse split with
-                String splitWithStr = getFieldValue(record, "split_with");
-                List<Long> splitWith = parseUserList(splitWithStr);
-                request.setSplitWith(splitWith);
-
-                // Parse split details
-                String splitDetailsRaw = getFieldValue(record, "split_details");
-                Map<String, Double> splitDetails = parseSplitDetails(splitDetailsRaw);
-                request.setSplitDetails(splitDetails);
-
-                expenses.add(request);
             }
         }
 
         return expenses;
+    }
+
+    /**
+     * Anomaly 11: Detect duplicate expenses already in the database
+     */
+    private void detectDuplicateExpenses(List<CreateExpenseRequest> expenseRequests, Long groupId, List<CsvAnomaly> anomalies) {
+        List<Expense> existingExpenses = expenseRepository.findByGroupId(groupId);
+
+        for (int i = 0; i < expenseRequests.size(); i++) {
+            CreateExpenseRequest request = expenseRequests.get(i);
+            int rowNum = i + 2;
+
+            for (Expense existing : existingExpenses) {
+                // Check if it's a duplicate (same description, amount, paid_by within reasonable time)
+                if (isDuplicate(request, existing)) {
+                    anomalies.add(new CsvAnomaly(
+                            rowNum, "DUPLICATE_IN_DATABASE",
+                            "Expense already exists in database", "description", request.getDescription(),
+                            "SKIPPED",
+                            "Duplicates are skipped to avoid double-entry"
+                    ));
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Anomaly 12: Check if users are valid members of the group
+     */
+    private void checkMembershipValidity(List<Long> userIds, Long groupId,
+                                         List<CsvAnomaly> anomalies, int rowNum) {
+        for (Long userId : userIds) {
+            if (!groupMemberRepository.findByGroupIdAndUserId(groupId, userId).isPresent()) {
+                String username = userRepository.findById(userId)
+                        .map(User::getUsername)
+                        .orElse("Unknown");
+
+                anomalies.add(new CsvAnomaly(
+                        rowNum, "USER_NOT_IN_GROUP",
+                        "User is not a member of this group", "split_with", username,
+                        "REMOVE_FROM_SPLIT",
+                        "Non-members are removed from split calculation"
+                ));
+            }
+        }
+    }
+
+    /**
+     * Check if split details sum matches the expense amount
+     */
+    private void validateSplitSum(CreateExpenseRequest request, List<Long> splitWith,
+                                   List<CsvAnomaly> anomalies, int rowNum) {
+        String splitType = request.getSplitType();
+        double amount = request.getAmount();
+        Map<String, Double> splitDetails = request.getSplitDetails();
+
+        if (splitType.equals("unequal")) {
+            double sum = splitDetails.values().stream().mapToDouble(d -> d).sum();
+            if (Math.abs(sum - amount) > 0.01) {
+                anomalies.add(new CsvAnomaly(
+                        rowNum, "SPLIT_SUM_MISMATCH",
+                        String.format("Split amounts (%.2f) don't match expense amount (%.2f)", sum, amount),
+                        "split_details", String.valueOf(sum),
+                        "PROPORTIONALLY_ADJUST",
+                        "Split amounts are proportionally adjusted to match total"
+                ));
+            }
+        } else if (splitType.equals("percentage")) {
+            double totalPercentage = splitDetails.values().stream().mapToDouble(d -> d).sum();
+            if (Math.abs(totalPercentage - 100.0) > 0.01) {
+                anomalies.add(new CsvAnomaly(
+                        rowNum, "PERCENTAGE_SUM_MISMATCH",
+                        String.format("Percentages (%.2f%%) don't sum to 100%%", totalPercentage),
+                        "split_details", String.valueOf(totalPercentage),
+                        "NORMALIZED",
+                        "Percentages are normalized to sum to 100%"
+                ));
+            }
+        }
+    }
+
+    /**
+     * Check if description/notes indicate a settlement
+     */
+    private boolean isSettlement(String description, String notes) {
+        String combined = (description + " " + (notes != null ? notes : "")).toLowerCase();
+        for (String keyword : SETTLEMENT_KEYWORDS) {
+            if (combined.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Create a unique signature for an expense to detect duplicates
+     */
+    private String createExpenseSignature(CreateExpenseRequest request) {
+        return String.format("%s|%f|%s|%s|%s",
+                request.getDescription(),
+                request.getAmount(),
+                request.getCurrency(),
+                request.getSplitType(),
+                request.getPaidByUserId()
+        );
+    }
+
+    /**
+     * Check if two expenses are duplicates
+     */
+    private boolean isDuplicate(CreateExpenseRequest request, Expense existing) {
+        return request.getDescription().equalsIgnoreCase(existing.getDescription()) &&
+               Math.abs(request.getAmount() - existing.getAmount()) < 0.01 &&
+               request.getCurrency().equals(existing.getCurrency()) &&
+               request.getPaidByUserId().equals(existing.getPaidBy());
+    }
+
+    /**
+     * Create a preview response (without actually creating expense)
+     */
+    private ExpenseResponse createPreviewResponse(CreateExpenseRequest request, Long groupId, int rowNum) {
+        // Get paid by username
+        User paidByUser = userRepository.findById(request.getPaidByUserId()).orElse(null);
+        String paidByUsername = paidByUser != null ? paidByUser.getUsername() : "Unknown";
+
+        // Get split usernames
+        List<ExpenseSplitResponse> splitResponses = new ArrayList<>();
+        double shareAmount = request.getAmount() / request.getSplitWith().size();
+
+        for (Long userId : request.getSplitWith()) {
+            User user = userRepository.findById(userId).orElse(null);
+            String username = user != null ? user.getUsername() : "Unknown";
+            splitResponses.add(new ExpenseSplitResponse(
+                    0L, userId, username, shareAmount, 100.0 / request.getSplitWith().size(), null
+            ));
+        }
+
+        return new ExpenseResponse(
+                0L, // Preview has no ID
+                groupId,
+                "Preview Group",
+                request.getPaidByUserId(),
+                paidByUsername,
+                request.getDescription(),
+                request.getAmount(),
+                request.getCurrency(),
+                request.getSplitType(),
+                request.getNotes(),
+                "PREVIEW-" + rowNum,
+                splitResponses
+        );
     }
 
     private String getFieldValue(CSVRecord record, String fieldName) {
@@ -119,13 +543,11 @@ public class CsvImportService {
     }
 
     private Long findUserIdByName(String name) {
-        // Try exact match first
         User user = userRepository.findByUsername(name).orElse(null);
         if (user != null) {
             return user.getId();
         }
 
-        // Try case-insensitive match
         List<User> users = userRepository.findAll();
         for (User u : users) {
             if (u.getUsername().equalsIgnoreCase(name)) {
@@ -143,7 +565,6 @@ public class CsvImportService {
             return userIds;
         }
 
-        // Parse semicolon-separated usernames like "Aisha;Rohan;Priya;Meera"
         String[] names = userListStr.split(";");
 
         for (String name : names) {
@@ -166,7 +587,6 @@ public class CsvImportService {
             return details;
         }
 
-        // Parse format like "Rohan 700; Priya 400; Meera 400"
         String[] parts = splitDetailsRaw.split(";");
 
         for (String part : parts) {

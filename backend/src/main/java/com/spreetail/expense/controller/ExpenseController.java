@@ -139,7 +139,29 @@ public class ExpenseController {
     }
 
     /**
-     * Import expenses from CSV file
+     * Preview CSV import without actually importing
+     * POST /api/expenses/import/{groupId}/preview
+     */
+    @PostMapping("/import/{groupId}/preview")
+    public ResponseEntity<?> previewCsvImport(
+            @PathVariable Long groupId,
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+
+            UserResponse user = userService.getUserByEmail(email);
+            ImportReportResponse report = csvImportService.previewCsvImport(file, groupId);
+            return ResponseEntity.ok(report);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Failed to preview CSV: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Import expenses from CSV file with full anomaly detection and reporting
      * POST /api/expenses/import/{groupId}
      */
     @PostMapping("/import/{groupId}")
@@ -153,8 +175,8 @@ public class ExpenseController {
             String email = userService.getUserEmailFromToken(token);
 
             UserResponse user = userService.getUserByEmail(email);
-            List<ExpenseResponse> imported = csvImportService.importExpensesFromCsv(file, groupId, user.getId());
-            return ResponseEntity.ok(imported);
+            ImportReportResponse report = csvImportService.importExpensesFromCsv(file, groupId, user.getId());
+            return ResponseEntity.ok(report);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Failed to import CSV: " + e.getMessage());
