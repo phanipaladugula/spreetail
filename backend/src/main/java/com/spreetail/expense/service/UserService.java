@@ -7,6 +7,14 @@ import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
 /**
  * Service class for User operations
  * This is the service layer in MCSA architecture
@@ -14,10 +22,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
+    private static final Logger logger = Logger.getLogger(UserService.class.getName());
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+
+    @Value("${app.env:production}")
+    private String appEnv;
+
+    // Rate limiting state
+    private final Map<String, LocalDateTime> lastResendMap = new ConcurrentHashMap<>();
+    private final Map<String, List<LocalDateTime>> resendHistoryMap = new ConcurrentHashMap<>();
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, EmailService emailService) {
         this.userRepository = userRepository;
@@ -52,6 +69,10 @@ public class UserService {
         user.setOtp(otp);
         user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
 
+        if ("development".equalsIgnoreCase(appEnv)) {
+            logger.info("DEVELOPMENT MODE OTP for " + user.getEmail() + " is " + otp);
+        }
+
         // Save user to database
         User savedUser = userRepository.save(user);
         
@@ -60,10 +81,60 @@ public class UserService {
             emailService.sendRegistrationOtpEmail(user.getEmail(), user.getUsername(), otp);
         } catch (Exception e) {
             // Log error but don't fail registration
+            logger.severe("Initial OTP email delivery failed: " + e.getMessage());
         }
 
         // Convert to response DTO
         return convertToUserResponse(savedUser);
+    }
+
+    /**
+     * Resend OTP with rate limiting
+     */
+    public void resendOtp(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!"PENDING".equals(user.getStatus())) {
+            throw new RuntimeException("User is already verified");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1 per minute check
+        LocalDateTime lastResend = lastResendMap.get(email);
+        if (lastResend != null && now.isBefore(lastResend.plusMinutes(1))) {
+            throw new RuntimeException("Please wait 1 minute before requesting another OTP");
+        }
+
+        // 5 per hour check
+        List<LocalDateTime> history = resendHistoryMap.computeIfAbsent(email, k -> new ArrayList<>());
+        history.removeIf(time -> time.isBefore(now.minusHours(1)));
+        if (history.size() >= 5) {
+            throw new RuntimeException("Too many requests. Please try again in an hour.");
+        }
+
+        // Generate new OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setOtp(otp);
+        user.setOtpExpiry(now.plusMinutes(10));
+        userRepository.save(user);
+
+        // Update rate limit state
+        lastResendMap.put(email, now);
+        history.add(now);
+
+        if ("development".equalsIgnoreCase(appEnv)) {
+            logger.info("DEVELOPMENT MODE RESEND OTP for " + user.getEmail() + " is " + otp);
+        }
+
+        // Send email
+        try {
+            emailService.sendRegistrationOtpEmail(user.getEmail(), user.getUsername(), otp);
+        } catch (Exception e) {
+            logger.severe("Resend OTP email delivery failed: " + e.getMessage());
+            throw new RuntimeException("Failed to send email. Please try again later.");
+        }
     }
 
     /**

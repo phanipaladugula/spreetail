@@ -52,6 +52,24 @@ public class UserController {
     }
 
     /**
+     * Resend OTP
+     * POST /api/auth/resend-otp
+     */
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestBody java.util.Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            if (email == null || email.trim().isEmpty()) {
+                throw new RuntimeException("Email is required");
+            }
+            userService.resendOtp(email);
+            return ResponseEntity.ok(java.util.Map.of("message", "A new OTP has been sent to your email."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
      * Login user
      * POST /api/auth/login
      */

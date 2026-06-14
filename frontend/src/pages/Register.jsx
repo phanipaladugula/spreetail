@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
-import { register, verifyOtp } from '../api/auth'
+import { register, verifyOtp, resendOtp } from '../api/auth'
 import SpreetailLogo from '../components/SpreetailLogo'
 import toast from 'react-hot-toast'
 
@@ -11,7 +11,16 @@ export default function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '', otp: '' })
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resendTimer, setResendTimer] = useState(0)
 
+  // Timer effect
+  useEffect(() => {
+    let interval
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000)
+    }
+    return () => clearInterval(interval)
+  }, [resendTimer])
   const handleRegisterSubmit = async (e) => {
     e.preventDefault()
     if (!form.username || !form.email || !form.password) return toast.error('Fill in all fields')
@@ -40,6 +49,17 @@ export default function Register() {
       toast.error(err.response?.data?.message || 'Verification failed')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (resendTimer > 0) return
+    try {
+      await resendOtp({ email: form.email })
+      toast.success('A new OTP has been sent to your email.')
+      setResendTimer(60) // 1 minute cooldown
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resend OTP')
     }
   }
 
@@ -160,6 +180,16 @@ export default function Register() {
               {loading ? <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2.5 }} /> : null}
               Verify Account
             </button>
+            <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' }}>
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendTimer > 0}
+                style={{ background: 'none', border: 'none', color: resendTimer > 0 ? '#555' : '#09cca9', cursor: resendTimer > 0 ? 'not-allowed' : 'pointer', fontWeight: 500 }}
+              >
+                {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
+              </button>
+            </div>
           </form>
         )}
 
