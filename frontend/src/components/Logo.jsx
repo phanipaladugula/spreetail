@@ -1,7 +1,15 @@
 import React from 'react';
+import spreetailLogo from '../assets/images/spreetail-logo.svg';
 import './Logo.css';
 
-function Logo({ size = 'medium' }) {
+/**
+ * Spreetail Logo Component
+ * Renders the official Spreetail logo with SVG support
+ * @param {Object} props
+ * @param {string} props.size - Size variant: 'small' | 'medium' | 'large'
+ * @param {boolean} props.withText - Whether to show text alongside icon
+ */
+function Logo({ size = 'medium', withText = true }) {
   const sizeClasses = {
     small: 'logo-small',
     medium: 'logo-medium',
@@ -10,12 +18,8 @@ function Logo({ size = 'medium' }) {
 
   return (
     <div className={`logo ${sizeClasses[size]}`}>
-      <img
-        src="https://www.builtin.com/files/2022-06-02/files/2022-06-02/FIcon2520Spreetail2520Large2520.png"
-        alt="Spreetail"
-        className="logo-image"
-      />
-      <span className="logo-text">Spreetail</span>
+      <img src={spreetailLogo} alt="Spreetail" className="logo-image" />
+      {withText && <span className="logo-text">Spreetail</span>}
     </div>
   );
 }

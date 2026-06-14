@@ -51,6 +51,47 @@ public class ExpenseController {
     }
 
     /**
+     * Update an existing expense
+     * PUT /api/expenses/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateExpense(@PathVariable Long id,
+                                           @RequestBody UpdateExpenseRequest request,
+                                           @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Get user ID from token
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+
+            UserResponse user = userService.getUserByEmail(email);
+            ExpenseResponse response = expenseService.updateExpense(id, request, user.getId());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Delete an expense
+     * DELETE /api/expenses/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteExpense(@PathVariable Long id,
+                                           @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Get user ID from token
+            String token = authHeader.substring(7);
+            String email = userService.getUserEmailFromToken(token);
+
+            UserResponse user = userService.getUserByEmail(email);
+            expenseService.deleteExpense(id, user.getId());
+            return ResponseEntity.ok("Expense deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
      * Get expense by ID
      * GET /api/expenses/{id}
      */

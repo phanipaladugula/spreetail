@@ -1,0 +1,630 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e5]:
+      - link [ref=e6] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+      - generic [ref=e23]:
+        - list [ref=e24]:
+          - listitem [ref=e25]:
+            - button "Services" [ref=e26] [cursor=pointer]:
+              - generic [ref=e27]: Services
+              - img [ref=e28]
+          - listitem [ref=e30]:
+            - button "How We Work" [ref=e31] [cursor=pointer]:
+              - generic [ref=e32]: How We Work
+              - img [ref=e33]
+          - listitem [ref=e35]:
+            - link "Success Stories" [ref=e36] [cursor=pointer]:
+              - /url: /success-stories
+              - generic [ref=e37]: Success Stories
+          - listitem [ref=e38]:
+            - button "Resources" [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]: Resources
+              - img [ref=e41]
+          - listitem [ref=e43]:
+            - button "Company" [ref=e44] [cursor=pointer]:
+              - generic [ref=e45]: Company
+              - img [ref=e46]
+        - list [ref=e48]:
+          - listitem [ref=e49]:
+            - link "Partner Login" [ref=e50] [cursor=pointer]:
+              - /url: https://echo.spreetail.com/auth/login
+              - generic [ref=e51]: Partner Login
+          - listitem [ref=e52]:
+            - link "Get Started" [ref=e53] [cursor=pointer]:
+              - /url: /work-with-us
+              - generic [ref=e54]: Get Started
+  - generic [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - heading "Ecommerce is complex. We handle the heavy lifting." [level=1] [ref=e59]:
+            - text: Ecommerce is complex.
+            - text: We handle the heavy lifting.
+          - paragraph [ref=e61]: Spreetail buys your inventory, scales your channels, and handles fulfillment end-to-end - all under one roof.
+        - generic [ref=e62]:
+          - link "Talk to an Expert" [ref=e63] [cursor=pointer]:
+            - /url: /work-with-us
+          - link "Success Stories" [ref=e64] [cursor=pointer]:
+            - /url: /success-stories
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]: 40%
+          - generic [ref=e68]: Average Year 1 Sales Growth
+        - generic [ref=e69]:
+          - generic [ref=e70]: 99.8%
+          - generic [ref=e71]: Shipped Same-Day
+        - generic [ref=e72]:
+          - generic [ref=e73]: 85%
+          - generic [ref=e74]: US Next-Day Delivery
+        - generic [ref=e75]:
+          - generic [ref=e76]: 97%
+          - generic [ref=e77]: In-Stock Rates
+    - img "Unicorn Studio Scene" [ref=e80]
+  - generic [ref=e82]:
+    - text:  
+    - generic [ref=e84]:
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - img "all season power logo" [ref=e87]
+          - generic [ref=e88]: “Spreetail’s ability to handle heavy, bulky products with Prime-speed delivery is what got us in the door — but what’s kept us here is the level of service across every part of their business. Advertising, account management, operations — they’ve exceeded expectations.”
+        - generic [ref=e90]: Paul Riley, Chief Operating Officer, All Season Power
+      - generic [ref=e91]:
+        - generic [ref=e92]:
+          - img "crown shades logo" [ref=e93]
+          - generic [ref=e94]: "\"The partnership feels collaborative and solution driven. Their team treats our business as if it were their own and continuously looks for ways to optimize our logistics, reduce costs, and enhance customer experience.\""
+        - generic [ref=e96]: Simon Yang, Crown Shades CEO
+      - generic [ref=e97]:
+        - generic [ref=e98]:
+          - img "Motis Brands logo" [ref=e99]
+          - generic [ref=e100]: "\"There's not a day that goes by that we aren't having some type of business driving conversations with Spreetail — pricing, assortment expansion, content optimization, buy box % improvements. Our Spreetail Team is exceptional and very attentive to driving business.”"
+        - generic [ref=e102]: Renee P, Chief Product Officer, Motis
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - img "Homz Logo" [ref=e105]
+          - generic [ref=e106]: "\"Partnering with Spreetail has been a game-changer for HOMZ. Their expertise in fulfillment and marketplace strategy helped us scale faster, reduce costs, and reclaim our position as a category leader.”"
+        - generic [ref=e108]: HOMZ Brand Representative
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - img "Rev-A-Shelf" [ref=e111]
+          - generic [ref=e112]: "\"Top to bottom Spreetail has the entire package and continues to reinvest in their platforms and their workforce. We are a 40-year-old company and walked away from multi-millions in 1P business to move to Spreetail’s platform and haven’t looked back.”"
+        - generic [ref=e114]: Steve Jones, CO-Owner, Rev-a-shelf
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - img "all season power logo" [ref=e117]
+          - generic [ref=e118]: “Spreetail’s ability to handle heavy, bulky products with Prime-speed delivery is what got us in the door — but what’s kept us here is the level of service across every part of their business. Advertising, account management, operations — they’ve exceeded expectations.”
+        - generic [ref=e120]: Paul Riley, Chief Operating Officer, All Season Power
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - img "crown shades logo" [ref=e123]
+          - generic [ref=e124]: "\"The partnership feels collaborative and solution driven. Their team treats our business as if it were their own and continuously looks for ways to optimize our logistics, reduce costs, and enhance customer experience.\""
+        - generic [ref=e126]: Simon Yang, Crown Shades CEO
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - img "Motis Brands logo" [ref=e129]
+          - generic [ref=e130]: "\"There's not a day that goes by that we aren't having some type of business driving conversations with Spreetail — pricing, assortment expansion, content optimization, buy box % improvements. Our Spreetail Team is exceptional and very attentive to driving business.”"
+        - generic [ref=e132]: Renee P, Chief Product Officer, Motis
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - img "Homz Logo" [ref=e135]
+          - generic [ref=e136]: "\"Partnering with Spreetail has been a game-changer for HOMZ. Their expertise in fulfillment and marketplace strategy helped us scale faster, reduce costs, and reclaim our position as a category leader.”"
+        - generic [ref=e138]: HOMZ Brand Representative
+      - generic [ref=e139]:
+        - generic [ref=e140]:
+          - img "Rev-A-Shelf" [ref=e141]
+          - generic [ref=e142]: "\"Top to bottom Spreetail has the entire package and continues to reinvest in their platforms and their workforce. We are a 40-year-old company and walked away from multi-millions in 1P business to move to Spreetail’s platform and haven’t looked back.”"
+        - generic [ref=e144]: Steve Jones, CO-Owner, Rev-a-shelf
+      - generic [ref=e145]:
+        - generic [ref=e146]:
+          - img "all season power logo" [ref=e147]
+          - generic [ref=e148]: “Spreetail’s ability to handle heavy, bulky products with Prime-speed delivery is what got us in the door — but what’s kept us here is the level of service across every part of their business. Advertising, account management, operations — they’ve exceeded expectations.”
+        - generic [ref=e150]: Paul Riley, Chief Operating Officer, All Season Power
+      - generic [ref=e151]:
+        - generic [ref=e152]:
+          - img "crown shades logo" [ref=e153]
+          - generic [ref=e154]: "\"The partnership feels collaborative and solution driven. Their team treats our business as if it were their own and continuously looks for ways to optimize our logistics, reduce costs, and enhance customer experience.\""
+        - generic [ref=e156]: Simon Yang, Crown Shades CEO
+      - generic [ref=e157]:
+        - generic [ref=e158]:
+          - img "Motis Brands logo" [ref=e159]
+          - generic [ref=e160]: "\"There's not a day that goes by that we aren't having some type of business driving conversations with Spreetail — pricing, assortment expansion, content optimization, buy box % improvements. Our Spreetail Team is exceptional and very attentive to driving business.”"
+        - generic [ref=e162]: Renee P, Chief Product Officer, Motis
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - img "Homz Logo" [ref=e165]
+          - generic [ref=e166]: "\"Partnering with Spreetail has been a game-changer for HOMZ. Their expertise in fulfillment and marketplace strategy helped us scale faster, reduce costs, and reclaim our position as a category leader.”"
+        - generic [ref=e168]: HOMZ Brand Representative
+      - generic [ref=e169]:
+        - generic [ref=e170]:
+          - img "Rev-A-Shelf" [ref=e171]
+          - generic [ref=e172]: "\"Top to bottom Spreetail has the entire package and continues to reinvest in their platforms and their workforce. We are a 40-year-old company and walked away from multi-millions in 1P business to move to Spreetail’s platform and haven’t looked back.”"
+        - generic [ref=e174]: Steve Jones, CO-Owner, Rev-a-shelf
+  - generic [ref=e184]:
+    - heading "Profitable growth across the shelves that matter" [level=2] [ref=e185]
+    - generic [ref=e186]: One partner that connects your logistics infrastructure to your growth engine — across the channels that drive your business.
+  - generic [ref=e189]:
+    - generic [ref=e192]:
+      - link "Launch" [ref=e193] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e194]:
+          - img [ref=e196]
+          - generic [ref=e201]: Launch
+      - link "Sell" [ref=e203] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e204]:
+          - img [ref=e206]
+          - generic [ref=e209]: Sell
+      - link "Ship" [ref=e211] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e212]:
+          - img [ref=e214]
+          - generic [ref=e218]: Ship
+      - link "Grow" [ref=e220] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e221]:
+          - img [ref=e223]
+          - generic [ref=e224]: Grow
+      - link "Your Partnership" [ref=e226] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e227]: Your Partnership
+      - link "Results" [ref=e229] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e230]: Results
+      - link "Get Started" [ref=e232] [cursor=pointer]:
+        - /url: /work-with-us
+        - generic [ref=e233]: Get Started
+    - generic [ref=e234]:
+      - generic [ref=e238]:
+        - generic [ref=e239]:
+          - generic [ref=e241]:
+            - img [ref=e243]
+            - generic [ref=e248]: Launch
+          - generic [ref=e250]:
+            - heading "Choose the model that fits your business" [level=3] [ref=e252]
+            - paragraph [ref=e254]: Spreetail offers two ways to partner — you pick the level of involvement that makes sense for your brand and goals.
+        - generic [ref=e260]:
+          - generic [ref=e261]:
+            - generic [ref=e263]: Wholesale
+            - generic [ref=e264]:
+              - generic [ref=e265]: We invest in your success before you sell a single unit
+              - paragraph [ref=e266]: Spreetail cuts a large wholesale purchase order upfront. And because we own the inventory, your brand isn't exposed to the reseller chaos that comes with open marketplace selling.
+            - generic [ref=e268]:
+              - generic [ref=e269]:
+                - img [ref=e271]
+                - paragraph [ref=e273]: We buy your inventory outright. You get paid, we go to work.
+              - generic [ref=e274]:
+                - img [ref=e276]
+                - paragraph [ref=e278]: Fully aligned incentives. When your sales grow, our business grows.
+              - generic [ref=e279]:
+                - img [ref=e281]
+                - paragraph [ref=e283]: Day one commitment. Our PO is our proof of partnership.
+            - link "Explore wholesale model" [ref=e285] [cursor=pointer]:
+              - /url: /end-to-end-ecommerce
+              - generic [ref=e286]: Explore wholesale model
+          - generic [ref=e287]:
+            - generic [ref=e289]: Services
+            - generic [ref=e290]:
+              - generic [ref=e291]:
+                - strong [ref=e292]: Pay for
+                - strong [ref=e294]: what you need
+              - paragraph [ref=e295]: Spreetail’s Services plug directly into your ecommerce strategy, allowing you to control your listings, pricing, and channels while we make sure customers get their product fast.
+            - generic [ref=e297]:
+              - generic [ref=e298]:
+                - img [ref=e300]
+                - paragraph [ref=e302]: 9 global FCs. US, UK, & Europe network
+              - generic [ref=e303]:
+                - img [ref=e305]
+                - paragraph [ref=e307]: Live in weeks. Dedicated onboarding support.
+              - generic [ref=e308]:
+                - img [ref=e310]
+                - paragraph [ref=e312]: Prime eligible. SFP unlock from day one.
+            - link "Explore services" [ref=e314] [cursor=pointer]:
+              - /url: /fulfillment-services
+              - generic [ref=e315]: Explore services
+        - generic [ref=e318]:
+          - generic [ref=e319]:
+            - generic [ref=e320]: 40% average
+            - generic [ref=e321]: first year sales growth for brand partners
+          - generic [ref=e322]:
+            - generic [ref=e323]: 70+ NPS
+            - generic [ref=e324]: scores from satisfied brand partners
+          - link "Explore a partnership" [ref=e326] [cursor=pointer]:
+            - /url: /work-with-us
+            - generic [ref=e327]: Explore a partnership
+      - generic [ref=e340]:
+        - generic [ref=e341]:
+          - generic [ref=e342]:
+            - img [ref=e344]
+            - generic [ref=e347]: Sell
+          - generic [ref=e349]:
+            - heading "20+ channels globally. One partner." [level=3] [ref=e351]
+            - paragraph [ref=e353]: Most brands are leaving revenue on the table by staying on one or two channels. Spreetail handles your listings, advertising, and promotions across every major marketplace, end-to-end.
+        - generic [ref=e355]:
+          - generic [ref=e356]:
+            - img "amazon logo"
+          - generic [ref=e357]:
+            - img "amazon canada logo"
+          - generic [ref=e358]:
+            - img "amazon uk logo"
+          - generic [ref=e359]:
+            - img "walmart logo"
+          - generic [ref=e360]:
+            - img "walmart canada logo"
+          - generic [ref=e361]:
+            - img "target logo"
+          - generic [ref=e362]:
+            - img "ebay logo"
+          - generic [ref=e363]:
+            - img "ebay uk logo"
+          - generic [ref=e364]:
+            - img "The home Depot logo"
+          - generic [ref=e365]:
+            - img "lowes logo"
+          - generic [ref=e366]:
+            - img "best buy logo"
+          - generic [ref=e367]:
+            - img "best buy canada logo"
+          - generic [ref=e368]:
+            - img "Shopify logo"
+          - generic [ref=e369]:
+            - img "tiktok logo"
+          - generic [ref=e370]:
+            - img "temu logo"
+          - generic [ref=e371]:
+            - img "shein logo"
+          - generic [ref=e372]:
+            - img "wayfair logo"
+          - generic [ref=e373]:
+            - img "wayfair uk logo"
+          - generic [ref=e374]:
+            - img "b&Q logo"
+          - generic [ref=e375]:
+            - img "onbuy logo"
+          - generic [ref=e376]:
+            - img "macys logo"
+          - generic [ref=e377]:
+            - img "overstock logo"
+          - generic [ref=e378]:
+            - img "VMI logo"
+        - generic [ref=e381]:
+          - generic [ref=e382]:
+            - generic [ref=e383]:
+              - generic [ref=e384]: Top 5 seller
+              - generic [ref=e385]: on most major marketplaces
+            - generic [ref=e386]:
+              - strong [ref=e388]: 30% of our GMV
+              - generic [ref=e389]: comes from non-Amazon channels
+            - generic [ref=e390]:
+              - strong [ref=e392]: 10%+ increase
+              - generic [ref=e393]: in revenue per SKU launched with Spreetail
+            - generic [ref=e394]:
+              - generic [ref=e395]: 97% in-stock
+              - generic [ref=e396]: rate across all brands we work with
+          - link "Sell on more channels" [ref=e397] [cursor=pointer]:
+            - /url: /marketplace-expansion
+            - generic [ref=e398]: Sell on more channels
+        - generic [ref=e401]:
+          - generic [ref=e403]: Global Expansion
+          - heading "Already winning in the US? Your next market is ready." [level=3] [ref=e404]
+          - paragraph [ref=e405]: 82% of global ecommerce value is outside the US, with cross-border demand creating even more opportunity. Spreetail’s dedicated international team launches your products across the UK, Germany, France, and beyond with the same end-to-end model you rely on at home.
+          - link "Explore global expansion" [ref=e407] [cursor=pointer]:
+            - /url: /global/global-ecommerce
+            - generic [ref=e408]: Explore global expansion
+        - generic [ref=e409]:
+          - 'generic "Rotating globe: EU, UK, US, and Canada highlighted" [ref=e412]'
+          - generic [ref=e418]:
+            - generic [ref=e419]:
+              - generic [ref=e420]: 75% of EU orders
+              - generic [ref=e421]: delivered next-day
+            - generic [ref=e422]:
+              - generic [ref=e423]: 25% average
+              - generic [ref=e424]: profit increase for EU brand partners
+      - generic [ref=e428]:
+        - generic [ref=e437]:
+          - generic [ref=e438]: Sell everywhere with one trusted partner.
+          - generic [ref=e439]:
+            - link "Expand Your Presence" [ref=e440] [cursor=pointer]:
+              - /url: /marketplace-expansion
+              - generic [ref=e441]: Expand Your Presence
+            - link "Talk to an Expert" [ref=e442] [cursor=pointer]:
+              - /url: /work-with-us
+              - generic [ref=e443]: Talk to an Expert
+        - generic [ref=e444]:
+          - generic [ref=e445]:
+            - generic [ref=e446]:
+              - img "Rev-A-Shelf" [ref=e447]
+              - img [ref=e449]
+            - generic [ref=e451]:
+              - generic [ref=e452]: 25% Increase in Channel Diversification
+              - generic [ref=e453]:
+                - generic [ref=e454]: Read story
+                - img [ref=e456]
+          - img "Kitchen corner cabinet with pull-out wire shelves holding yellow and white dishware and a metal pot." [ref=e460]
+          - link [ref=e461] [cursor=pointer]:
+            - /url: https://www.spreetail.com/success-story/rev-a-shelf
+      - generic [ref=e466]:
+        - generic [ref=e467]:
+          - generic [ref=e468]:
+            - img [ref=e470]
+            - generic [ref=e474]: Ship
+          - heading "Hard-to-ship? Not for us." [level=3] [ref=e476]
+        - generic [ref=e479]:
+          - generic [ref=e480]:
+            - generic [ref=e481]: Largest
+            - generic [ref=e482]: Seller Fulfilled Prime Network
+          - generic [ref=e483]:
+            - generic [ref=e484]: 1.5 Day
+            - generic [ref=e485]: Average Click-to-Delivery in US
+          - generic [ref=e486]:
+            - generic [ref=e487]: 85%
+            - generic [ref=e488]:
+              - text: US Population
+              - generic [ref=e489]: Covered Next-Day
+        - generic [ref=e499]:
+          - generic [ref=e500]:
+            - img "Prime badge" [ref=e501]
+            - generic [ref=e502]: Prime-Speed
+            - generic [ref=e503]: 99.8% same-day shipping –– including heavy, awkward, and cold-chain items.
+          - generic [ref=e504]:
+            - generic [ref=e505]: Oversized Experts
+            - generic [ref=e506]: Big-&-bulky without the big penalties.
+          - generic [ref=e507]:
+            - img "Inventory management icon" [ref=e508]
+            - generic [ref=e509]: In-stock Reliability
+            - generic [ref=e510]: Less than 3% out-of-stock rate across our entire network.
+          - generic [ref=e511]:
+            - img "Money Icon" [ref=e512]
+            - generic [ref=e513]: Speed Drives Revenue
+            - generic [ref=e514]: Every day of shipping improvement adds 12.5% GMV lift.
+        - generic [ref=e521]:
+          - generic [ref=e523]:
+            - text: Fulfillment built for big-&-bulky.
+            - generic [ref=e524]: At Prime speed.
+          - generic [ref=e525]:
+            - link "Explore Fulfillment" [ref=e526] [cursor=pointer]:
+              - /url: /fulfillment
+              - generic [ref=e527]: Explore Fulfillment
+            - link "Talk to an Expert" [ref=e528] [cursor=pointer]:
+              - /url: /work-with-us
+              - generic [ref=e529]: Talk to an Expert
+      - generic [ref=e542]:
+        - generic [ref=e543]:
+          - generic [ref=e544]:
+            - img [ref=e546]
+            - generic [ref=e547]: Grow
+          - generic [ref=e549]:
+            - heading "Own the digital shelf" [level=3] [ref=e551]
+            - paragraph [ref=e553]: On today’s marketplaces, growth is determined at the moment of decision. We engineer every signal that shapes it.
+        - generic [ref=e555]:
+          - generic [ref=e556]:
+            - generic [ref=e557]: 97.43%
+            - generic [ref=e558]: Increase in Total Sales
+          - generic [ref=e559]:
+            - generic [ref=e560]: 9:1
+            - generic [ref=e561]: Return on Ad Spend
+          - generic [ref=e562]:
+            - generic [ref=e563]: 270%
+            - generic [ref=e564]: Improvement in Best Seller Rank
+        - generic [ref=e571]:
+          - generic [ref=e573]:
+            - generic [ref=e574]: Search visibility
+            - generic [ref=e575]: We make sure your products show up when shoppers are looking. Our tools continuously monitor keyword performance, category ranking, and content gaps.
+          - generic [ref=e577]:
+            - generic [ref=e578]: Content & A+ presence
+            - generic [ref=e579]: At the moment of comparison, clarity wins. Our content team uses proprietary optimization tools to write, test, and refine your product content so buyers choose you.
+          - generic [ref=e581]:
+            - generic [ref=e582]: Pricing position
+            - generic [ref=e583]: Winning the Buy Box matters. So does protecting your margin. Our pricing engine monitors competitive signals in real time and adjusts so you stay competitive without giving up profit.
+          - generic [ref=e585]:
+            - generic [ref=e586]: Delivery promise
+            - generic [ref=e587]: Our fulfillment intelligence dynamically surfaces accurate delivery promises at the point of purchase - ones we already know we can keep.
+          - generic [ref=e589]:
+            - generic [ref=e590]: Reviews & reputation
+            - generic [ref=e591]: Ratings drive sales. Our in-house customer care team manages reviews, resolves friction, and keeps your ratings where they need to be.
+          - generic [ref=e593]:
+            - generic [ref=e594]: Demand generation
+            - generic [ref=e595]: Our incrementality engine isolates true lift and reallocates spend to where it’s actually working. Promotional strategy aligns with inventory and pricing to drive spikes in demand without discounting your brand.
+      - generic [ref=e598]:
+        - generic [ref=e607]:
+          - generic [ref=e608]: Ready to grow on every marketplace?
+          - generic [ref=e609]:
+            - link "See How It Works" [ref=e610] [cursor=pointer]:
+              - /url: /marketing-advertising
+              - generic [ref=e611]: See How It Works
+            - link "Talk to an Expert" [ref=e612] [cursor=pointer]:
+              - /url: /work-with-us
+              - generic [ref=e613]: Talk to an Expert
+        - generic [ref=e614]:
+          - generic [ref=e615]:
+            - generic [ref=e616]:
+              - img "Motis Brands logo" [ref=e617]
+              - img [ref=e619]
+            - generic [ref=e621]:
+              - generic [ref=e622]: 600% Market Share Growth Year Over Year
+              - generic [ref=e623]:
+                - generic [ref=e624]: Read story
+                - img [ref=e626]
+          - img "Man in motocross gear pushing a small blue Yamaha dirt bike up a ramp onto a trailer with a larger bike." [ref=e630]
+          - link [ref=e631] [cursor=pointer]:
+            - /url: https://www.spreetail.com/success-story/motis
+      - generic [ref=e636]:
+        - generic [ref=e637]:
+          - generic [ref=e639]: Your Partnership
+          - generic [ref=e641]:
+            - heading "Visibility without noise" [level=3] [ref=e643]
+            - generic [ref=e644]:
+              - paragraph [ref=e645]: BEx, Spreetail's Brand Experience Portal, connects your team directly into our live retail and fulfillment environment. Same data. Same decisions. Full visibility across every stage of the partnership.
+              - link "Explore BEx" [ref=e646] [cursor=pointer]:
+                - /url: /working-with-us/bex
+                - generic [ref=e647]: Explore BEx
+                - img [ref=e649]
+        - generic [ref=e656]:
+          - generic [ref=e657]:
+            - img "rocket Icon" [ref=e658]
+            - generic [ref=e659]: Launch
+            - generic [ref=e660]: Track your brand as it goes live across Spreetail's network.
+          - generic [ref=e661]:
+            - img "process icon" [ref=e662]
+            - generic [ref=e663]: Manage
+            - generic [ref=e664]: Real-time sales and financial performance across every channel.
+          - generic [ref=e665]:
+            - img "cycle icon" [ref=e666]
+            - generic [ref=e667]: Optimize
+            - generic [ref=e668]: Advertising, inventory, and operational signals surfaced so our teams can act.
+          - generic [ref=e669]:
+            - img "scale icon" [ref=e670]
+            - generic [ref=e671]: Scale
+            - generic [ref=e672]: As the partnership grows, BEx keeps both sides working from the same truth.
+      - generic [ref=e685]:
+        - generic [ref=e686]:
+          - generic [ref=e688]: Results
+          - heading "Proven growth for top ecommerce brands" [level=3] [ref=e690]:
+            - text: Proven growth for
+            - text: top ecommerce brands
+        - generic [ref=e691]:
+          - generic [ref=e694]:
+            - link "Success Stories" [ref=e695] [cursor=pointer]:
+              - /url: /success-stories
+            - generic [ref=e696]:
+              - generic:
+                - generic:
+                  - img
+              - img [ref=e699]
+          - generic [ref=e702]:
+            - link "crown shades logo Crown Shades Achieves 1.29-Day Click-to-Delivery on Amazon Read Crown Shades' Story" [ref=e703] [cursor=pointer]:
+              - /url: https://www.spreetail.com/success-story/crown-shades
+              - img "crown shades logo" [ref=e705]
+              - generic [ref=e707]:
+                - generic [ref=e708]: Crown Shades Achieves 1.29-Day Click-to-Delivery on Amazon
+                - generic [ref=e709]:
+                  - generic [ref=e710]: Read Crown Shades' Story
+                  - img [ref=e712]
+            - link "Motis Brands logo Motis Achieves 600% YoY Market Share Growth—Despite Tariffs Read Motis' Story" [ref=e715] [cursor=pointer]:
+              - /url: https://www.spreetail.com/success-story/motis
+              - img "Motis Brands logo" [ref=e718]
+              - generic [ref=e719]:
+                - generic [ref=e720]: Motis Achieves 600% YoY Market Share Growth—Despite Tariffs
+                - generic [ref=e721]:
+                  - generic [ref=e722]: Read Motis' Story
+                  - img [ref=e724]
+            - link "Dynamic Saunas Logo 69% YoY GMV Lift Through Smarter Big-and-Bulky Fulfillment Read Dynamic Saunas' Story" [ref=e727] [cursor=pointer]:
+              - /url: https://www.spreetail.com/success-story/dynamic-saunas
+              - generic [ref=e728]:
+                - img "Dynamic Saunas Logo"
+              - generic [ref=e730]:
+                - generic [ref=e731]: 69% YoY GMV Lift Through Smarter Big-and-Bulky Fulfillment
+                - generic [ref=e732]:
+                  - generic [ref=e733]: Read Dynamic Saunas' Story
+                  - img [ref=e735]
+            - link "all season power logo From Oversized Chaos to Top-Selling Brand in Snow Removal Read All Season Power's Story" [ref=e738] [cursor=pointer]:
+              - /url: https://www.spreetail.com/success-story/all-season-power
+              - img "all season power logo" [ref=e741]
+              - generic [ref=e742]:
+                - generic [ref=e743]: From Oversized Chaos to Top-Selling Brand in Snow Removal
+                - generic [ref=e744]:
+                  - generic [ref=e745]: Read All Season Power's Story
+                  - img [ref=e747]
+            - link "Homz Logo How Homz Tripled Market Share & Quadrupled GMV in One Year Read Homz's Story" [ref=e750] [cursor=pointer]:
+              - /url: https://www.spreetail.com/success-story/homz
+              - img "Homz Logo" [ref=e753]
+              - generic [ref=e754]:
+                - generic [ref=e755]: How Homz Tripled Market Share & Quadrupled GMV in One Year
+                - generic [ref=e756]:
+                  - generic [ref=e757]: Read Homz's Story
+                  - img [ref=e759]
+  - iframe [ref=e771]:
+    
+  - generic [ref=e774]:
+    - generic [ref=e775]: Control the chaos. Command your growth.
+    - link "Talk to an Expert" [ref=e776] [cursor=pointer]:
+      - /url: /work-with-us
+  - generic [ref=e779]:
+    - generic [ref=e780]:
+      - generic [ref=e781]:
+        - generic [ref=e782]: What We Do
+        - link "Fulfillment & Logistics" [ref=e783] [cursor=pointer]:
+          - /url: /fulfillment
+        - link "Fulfillment Services" [ref=e784] [cursor=pointer]:
+          - /url: /fulfillment-services
+        - link "Smart Shelf Tools" [ref=e785] [cursor=pointer]:
+          - /url: /smart-shelf
+        - link "Brand Experience Portal" [ref=e786] [cursor=pointer]:
+          - /url: /working-with-us/bex
+        - link "Marketplace Expansion" [ref=e787] [cursor=pointer]:
+          - /url: /marketplace-expansion
+        - link "Content & Creative" [ref=e788] [cursor=pointer]:
+          - /url: /content-creative
+        - link "Brand Control" [ref=e789] [cursor=pointer]:
+          - /url: /brand-control
+        - link "Marketing & Advertising" [ref=e790] [cursor=pointer]:
+          - /url: /marketing-advertising
+        - link "Buy Box Experts" [ref=e791] [cursor=pointer]:
+          - /url: https://www.buyboxexperts.com/
+        - link "Global Ecommerce" [ref=e792] [cursor=pointer]:
+          - /url: /global/global-ecommerce
+        - link "Customer Support" [ref=e793] [cursor=pointer]:
+          - /url: /customer-support
+      - generic [ref=e794]:
+        - generic [ref=e795]: Company
+        - link "About Us" [ref=e796] [cursor=pointer]:
+          - /url: /about/about-us
+        - link "Careers" [ref=e797] [cursor=pointer]:
+          - /url: /about/careers
+        - link "Communities" [ref=e798] [cursor=pointer]:
+          - /url: /about/communities
+        - link "Our Leaders" [ref=e799] [cursor=pointer]:
+          - /url: /about/leadership
+        - link "Newsroom" [ref=e800] [cursor=pointer]:
+          - /url: /about/newsroom
+        - link "FAQ" [ref=e801] [cursor=pointer]:
+          - /url: /about/faq
+      - generic [ref=e802]:
+        - generic [ref=e803]: Resources
+        - link "Blog" [ref=e804] [cursor=pointer]:
+          - /url: /blog
+        - link "Success Stories" [ref=e805] [cursor=pointer]:
+          - /url: /success-stories
+        - link "Newsletter" [ref=e806] [cursor=pointer]:
+          - /url: /newsletter-signup
+        - link "Partner Login" [ref=e807] [cursor=pointer]:
+          - /url: https://echo.spreetail.com/auth/login
+        - link "Customer Service" [ref=e808] [cursor=pointer]:
+          - /url: /customer-service
+        - link "Contact" [ref=e809] [cursor=pointer]:
+          - /url: /contact
+        - link "Partner Login" [ref=e810] [cursor=pointer]:
+          - /url: https://echo.spreetail.com/
+      - generic [ref=e811]:
+        - generic [ref=e812]: Legal
+        - link "Privacy Policy" [ref=e813] [cursor=pointer]:
+          - /url: /spreetail-privacy-statement
+        - link "Cookie Policy" [ref=e814] [cursor=pointer]:
+          - /url: /cookie-policy
+    - generic [ref=e815]:
+      - generic [ref=e817]:
+        - generic [ref=e818]:
+          - generic [ref=e819]: United States
+          - generic [ref=e820]:
+            - text: 2125 Transformation Dr, Suite 3200
+            - text: Lincoln, NE 68508
+        - generic [ref=e821]:
+          - generic [ref=e822]: United Kingdom
+          - generic [ref=e823]:
+            - text: Unit 19 Ascent Logistics Park N
+            - text: Leighton Buzzard, LU73RJ
+      - generic [ref=e825]:
+        - generic [ref=e826]:
+          - link [ref=e828] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/spreetail
+          - link [ref=e830] [cursor=pointer]:
+            - /url: https://www.youtube.com/@Spreetail
+          - link [ref=e832] [cursor=pointer]:
+            - /url: https://www.facebook.com/spreetail/
+          - link [ref=e834] [cursor=pointer]:
+            - /url: https://www.instagram.com/spreetail/
+          - link [ref=e836] [cursor=pointer]:
+            - /url: https://twitter.com/spreetail
+        - generic [ref=e837]:
+          - text: ©2026 Spreetail LLC. All rights reserved.
+          - text: Have a question? 1-866-639-9320

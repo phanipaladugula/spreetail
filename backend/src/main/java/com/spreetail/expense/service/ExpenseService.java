@@ -195,6 +195,114 @@ public class ExpenseService {
     }
 
     /**
+     * Update an existing expense
+     */
+    @Transactional
+    public ExpenseResponse updateExpense(Long expenseId, UpdateExpenseRequest request, Long currentUserId) {
+        // Validate expense exists
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        // Validate user is member of group
+        if (!groupMemberRepository.findByGroupIdAndUserId(expense.getGroupId(), currentUserId).isPresent()) {
+            throw new RuntimeException("User is not a member of this group");
+        }
+
+        // Validate split type if provided
+        if (request.getSplitType() != null) {
+            String splitType = request.getSplitType();
+            if (!splitType.equals("equal") && !splitType.equals("unequal") &&
+                !splitType.equals("percentage") && !splitType.equals("share")) {
+                throw new RuntimeException("Invalid split type. Must be equal, unequal, percentage, or share");
+            }
+        }
+
+        // Update expense fields
+        if (request.getDescription() != null) {
+            expense.setDescription(request.getDescription());
+        }
+        if (request.getAmount() != null) {
+            expense.setAmount(request.getAmount());
+        }
+        if (request.getCurrency() != null) {
+            expense.setCurrency(request.getCurrency());
+        }
+        if (request.getSplitType() != null) {
+            expense.setSplitType(request.getSplitType());
+        }
+        if (request.getNotes() != null) {
+            expense.setNotes(request.getNotes());
+        }
+
+        // Save updated expense
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // If split type or splitWith changed, recreate splits
+        if (request.getSplitType() != null || request.getSplitWith() != null ||
+            request.getSplitDetails() != null) {
+
+            // Delete old splits
+            expenseSplitRepository.deleteByExpenseId(expenseId);
+
+            // Create new splits
+            CreateExpenseRequest splitRequest = new CreateExpenseRequest();
+            splitRequest.setGroupId(expense.getGroupId());
+            splitRequest.setPaidByUserId(expense.getPaidBy());
+            splitRequest.setDescription(expense.getDescription());
+            splitRequest.setAmount(expense.getAmount());
+            splitRequest.setCurrency(expense.getCurrency());
+            splitRequest.setSplitType(expense.getSplitType());
+            splitRequest.setNotes(expense.getNotes());
+
+            if (request.getSplitWith() != null) {
+                splitRequest.setSplitWith(request.getSplitWith());
+            } else {
+                // Use original splitWith
+                splitRequest.setSplitWith(getOriginalSplitWithUsers(savedExpense));
+            }
+
+            if (request.getSplitDetails() != null) {
+                splitRequest.setSplitDetails(request.getSplitDetails());
+            }
+
+            List<ExpenseSplit> newSplits = createSplits(savedExpense, splitRequest);
+            savedExpense.setSplits(newSplits);
+        }
+
+        return convertToExpenseResponse(savedExpense);
+    }
+
+    /**
+     * Delete an expense
+     */
+    @Transactional
+    public void deleteExpense(Long expenseId, Long currentUserId) {
+        // Validate expense exists
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        // Validate user is member of group
+        if (!groupMemberRepository.findByGroupIdAndUserId(expense.getGroupId(), currentUserId).isPresent()) {
+            throw new RuntimeException("User is not a member of this group");
+        }
+
+        // Delete expense (splits will be deleted by cascade)
+        expenseRepository.deleteById(expenseId);
+    }
+
+    /**
+     * Get original splitWith users from expense
+     */
+    private List<Long> getOriginalSplitWithUsers(Expense expense) {
+        List<ExpenseSplit> splits = expenseSplitRepository.findByExpenseId(expense.getId());
+        List<Long> userIds = new ArrayList<>();
+        for (ExpenseSplit split : splits) {
+            userIds.add(split.getUserId());
+        }
+        return userIds;
+    }
+
+    /**
      * Get expense by ID
      */
     public ExpenseResponse getExpenseById(Long id) {

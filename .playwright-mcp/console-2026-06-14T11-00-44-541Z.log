@@ -1,0 +1,6 @@
+[    1968ms] TypeError: THREE.SphereGeometry is not a constructor
+    at applyGlobeDotOcclusion (https://www.spreetail.com/:1005:17)
+    at https://www.spreetail.com/:1072:13
+[    1972ms] TypeError: THREE.SphereGeometry is not a constructor
+    at applyGlobeDotOcclusion (https://www.spreetail.com/:1005:17)
+    at https://www.spreetail.com/:1075:13

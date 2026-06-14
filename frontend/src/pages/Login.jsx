@@ -1,89 +1,183 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
 import './Login.css';
 
+/**
+ * Login Page
+ * Professional Spreetail-inspired authentication page
+ */
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
-    const result = await login(email, password);
+    if (!validateForm()) {
+      return;
+    }
 
-    if (result.success) {
+    setLoading(true);
+    try {
+      await login(formData.email, formData.password);
       navigate('/dashboard');
-    } else {
-      setError(typeof result.error === 'string' ? result.error : 'Login failed. Please try again.');
+    } catch (error) {
+      setErrors({
+        submit: error.message || 'Login failed. Please check your credentials.'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-background"></div>
-      <div className="auth-card">
-        <div className="auth-logo">
-          <Logo size="large" />
+    <div className="login-page">
+      <div className="login-container">
+        {/* Logo Section */}
+        <div className="login-header">
+          <div className="login-logo">
+            <Logo size="large" />
+          </div>
+          <h1 className="login-title">Welcome back</h1>
+          <p className="login-subtitle">Sign in to manage your shared expenses</p>
         </div>
-        <h2>Welcome Back</h2>
-        <p className="auth-subtitle">Sign in to your Spreetail account</p>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="login-form">
+          {/* Error Alert */}
+          {errors.submit && (
+            <div className="alert alert-danger">
+              <span>⚠️</span>
+              {errors.submit}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
+          {/* Email Field */}
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email address</label>
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="you@example.com"
-              required
+              className={errors.email ? 'error' : ''}
+              disabled={loading}
+              autoComplete="email"
             />
+            {errors.email && <span className="form-error">{errors.email}</span>}
           </div>
 
+          {/* Password Field */}
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="•••••••••"
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className={errors.password ? 'error' : ''}
+                disabled={loading}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
+            {errors.password && <span className="form-error">{errors.password}</span>}
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block">
-            Sign In
+          {/* Submit Button */}
+          <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
-        <p className="auth-footer">
-          Don't have an account? <a href="/register">Create Account</a>
-        </p>
+        {/* Footer */}
+        <div className="login-footer">
+          <p className="login-footer-text">
+            Don't have an account?{' '}
+            <Link to="/register" className="link-primary">
+              Create one
+            </Link>
+          </p>
+        </div>
 
-        <div className="auth-features">
-          <div className="feature">
-            <div className="feature-icon">💰</div>
-            <div className="feature-text">Track expenses</div>
+        {/* Features */}
+        <div className="login-features">
+          <div className="feature-item">
+            <span className="feature-icon">💰</span>
+            <span className="feature-text">Track expenses</span>
           </div>
-          <div className="feature">
-            <div className="feature-icon">⚖️</div>
-            <div className="feature-text">Split bills easily</div>
+          <div className="feature-item">
+            <span className="feature-icon">⚖️</span>
+            <span className="feature-text">Split bills easily</span>
           </div>
-          <div className="feature">
-            <div className="feature-icon">👥</div>
-            <div className="feature-text">Manage groups</div>
+          <div className="feature-item">
+            <span className="feature-icon">👥</span>
+            <span className="feature-text">Manage groups</span>
           </div>
         </div>
+      </div>
+
+      {/* Background Decoration */}
+      <div className="login-background">
+        <div className="gradient-circle circle-1"></div>
+        <div className="gradient-circle circle-2"></div>
+        <div className="gradient-circle circle-3"></div>
       </div>
     </div>
   );

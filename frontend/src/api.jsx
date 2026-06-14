@@ -8,230 +8,292 @@ const getAuthHeader = () => {
   };
 };
 
+const handleApiResponse = async (response) => {
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+
+  if (!response.ok) {
+    if (isJson) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || errorData.error || 'An error occurred');
+    }
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  if (isJson) {
+    const data = await response.json();
+    // Handle standardized response format
+    if (data.success !== undefined) {
+      if (data.success) {
+        return data.data !== undefined ? data.data : data;
+      } else {
+        throw new Error(data.message || 'Request failed');
+      }
+    }
+    return data;
+  }
+
+  return response.text();
+};
+
 export const api = {
   // Auth
-  login: (email, password) => {
-    return fetch(API_BASE_URL + '/auth/login', {
+  login: async (email, password) => {
+    const response = await fetch(API_BASE_URL + '/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  register: (username, email, password) => {
-    return fetch(API_BASE_URL + '/auth/register', {
+  register: async (username, email, password) => {
+    const response = await fetch(API_BASE_URL + '/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getUser: () => {
-    return fetch(API_BASE_URL + '/auth/me', {
+  getUser: async () => {
+    const response = await fetch(API_BASE_URL + '/auth/me', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Groups
-  getMyGroups: () => {
-    return fetch(API_BASE_URL + '/groups/my', {
+  getMyGroups: async () => {
+    const response = await fetch(API_BASE_URL + '/groups/my', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    const data = await handleApiResponse(response);
+    return Array.isArray(data) ? data : (data.data || []);
   },
 
-  getGroup: (groupId) => {
-    return fetch(API_BASE_URL + '/groups/' + groupId, {
+  getGroup: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/groups/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  createGroup: (data) => {
-    return fetch(API_BASE_URL + '/groups', {
+  createGroup: async (data) => {
+    const response = await fetch(API_BASE_URL + '/groups', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify(data)
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  addMember: (groupId, userId) => {
-    return fetch(API_BASE_URL + '/groups/' + groupId + '/members', {
+  addMember: async (groupId, userId) => {
+    const response = await fetch(API_BASE_URL + '/groups/' + groupId + '/members', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify({ userId })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  removeMember: (groupId, userId) => {
-    return fetch(API_BASE_URL + '/groups/' + groupId + '/members/' + userId, {
+  removeMember: async (groupId, userId) => {
+    const response = await fetch(API_BASE_URL + '/groups/' + groupId + '/members/' + userId, {
       method: 'DELETE',
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Expenses
-  getGroupExpenses: (groupId) => {
-    return fetch(API_BASE_URL + '/expenses/group/' + groupId, {
+  getGroupExpenses: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/expenses/group/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  createExpense: (data) => {
-    return fetch(API_BASE_URL + '/expenses', {
+  createExpense: async (data) => {
+    const response = await fetch(API_BASE_URL + '/expenses', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify(data)
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Settlements
-  getGroupBalances: (groupId) => {
-    return fetch(API_BASE_URL + '/settlements/balances/' + groupId, {
+  getGroupBalances: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/settlements/balances/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getSettlementSuggestions: (groupId) => {
-    return fetch(API_BASE_URL + '/settlements/suggestions/' + groupId, {
+  getSettlementSuggestions: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/settlements/suggestions/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  recordSettlement: (data) => {
-    return fetch(API_BASE_URL + '/settlements', {
+  recordSettlement: async (data) => {
+    const response = await fetch(API_BASE_URL + '/settlements', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify(data)
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getGroupSettlements: (groupId) => {
-    return fetch(API_BASE_URL + '/settlements/group/' + groupId, {
+  getGroupSettlements: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/settlements/group/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Friends
-  sendFriendRequest: (email) => {
-    return fetch(API_BASE_URL + '/friends/request', {
+  sendFriendRequest: async (email) => {
+    const response = await fetch(API_BASE_URL + '/friends/request', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify({ email })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  acceptFriendRequest: (requestId) => {
-    return fetch(API_BASE_URL + '/friends/accept/' + requestId, {
+  acceptFriendRequest: async (requestId) => {
+    const response = await fetch(API_BASE_URL + '/friends/accept/' + requestId, {
       method: 'POST',
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  declineFriendRequest: (requestId) => {
-    return fetch(API_BASE_URL + '/friends/decline/' + requestId, {
+  declineFriendRequest: async (requestId) => {
+    const response = await fetch(API_BASE_URL + '/friends/decline/' + requestId, {
       method: 'POST',
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getFriends: () => {
-    return fetch(API_BASE_URL + '/friends', {
+  getFriends: async () => {
+    const response = await fetch(API_BASE_URL + '/friends', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    const data = await handleApiResponse(response);
+    return Array.isArray(data) ? data : (data.data || []);
   },
 
-  getPendingRequests: () => {
-    return fetch(API_BASE_URL + '/friends/pending', {
+  getPendingRequests: async () => {
+    const response = await fetch(API_BASE_URL + '/friends/pending', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    const data = await handleApiResponse(response);
+    return Array.isArray(data) ? data : (data.data || []);
   },
 
   // Invitations
-  createInvitation: (groupId, invitedEmail) => {
-    return fetch(API_BASE_URL + '/invitations', {
+  createInvitation: async (groupId, invitedEmail) => {
+    const response = await fetch(API_BASE_URL + '/invitations', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify({ groupId, invitedEmail })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  acceptInvitation: (code) => {
-    return fetch(API_BASE_URL + '/invitations/accept/' + code, {
+  acceptInvitation: async (code) => {
+    const response = await fetch(API_BASE_URL + '/invitations/accept/' + code, {
       method: 'POST',
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getGroupInvitations: (groupId) => {
-    return fetch(API_BASE_URL + '/invitations/group/' + groupId, {
+  getGroupInvitations: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/invitations/group/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getMyInvitations: () => {
-    return fetch(API_BASE_URL + '/invitations/my', {
+  getMyInvitations: async () => {
+    const response = await fetch(API_BASE_URL + '/invitations/my', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Comments
-  addComment: (expenseId, text) => {
-    return fetch(API_BASE_URL + '/comments', {
+  addComment: async (expenseId, text) => {
+    const response = await fetch(API_BASE_URL + '/comments', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify({ expenseId, text })
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getExpenseComments: (expenseId) => {
-    return fetch(API_BASE_URL + '/comments/expense/' + expenseId, {
+  getExpenseComments: async (expenseId) => {
+    const response = await fetch(API_BASE_URL + '/comments/expense/' + expenseId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getMyComments: () => {
-    return fetch(API_BASE_URL + '/comments/my', {
+  getMyComments: async () => {
+    const response = await fetch(API_BASE_URL + '/comments/my', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  deleteComment: (commentId) => {
-    return fetch(API_BASE_URL + '/comments/' + commentId, {
+  deleteComment: async (commentId) => {
+    const response = await fetch(API_BASE_URL + '/comments/' + commentId, {
       method: 'DELETE',
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // Activity
-  getMyActivities: () => {
-    return fetch(API_BASE_URL + '/activities/my', {
+  getMyActivities: async () => {
+    const response = await fetch(API_BASE_URL + '/activities/my', {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getGroupActivities: (groupId) => {
-    return fetch(API_BASE_URL + '/activities/group/' + groupId, {
+  getGroupActivities: async (groupId) => {
+    const response = await fetch(API_BASE_URL + '/activities/group/' + groupId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
-  getEntityActivities: (entityType, entityId) => {
-    return fetch(API_BASE_URL + '/activities/' + entityType + '/' + entityId, {
+  getEntityActivities: async (entityType, entityId) => {
+    const response = await fetch(API_BASE_URL + '/activities/' + entityType + '/' + entityId, {
       headers: getAuthHeader()
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   },
 
   // CSV Import
-  importExpenses: (groupId, file) => {
+  importExpenses: async (groupId, file) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    return fetch(API_BASE_URL + '/expenses/import/' + groupId, {
+    const response = await fetch(API_BASE_URL + '/expenses/import/' + groupId, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('token')
       },
       body: formData
-    }).then(res => res.json());
+    });
+    return handleApiResponse(response);
   }
 };
 

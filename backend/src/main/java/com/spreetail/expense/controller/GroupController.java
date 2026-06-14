@@ -8,10 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller class for Group operations
+ * Handles group creation, member management, and group retrieval
  */
 @RestController
 @RequestMapping("/api/groups")
@@ -33,18 +36,28 @@ public class GroupController {
     public ResponseEntity<?> createGroup(@Valid @RequestBody CreateGroupRequest request,
                                            @RequestHeader("Authorization") String authHeader) {
         try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("Missing or invalid authorization header"));
+            }
+
             // Get user ID from token
             String token = authHeader.substring(7);
             String email = userService.getUserEmailFromToken(token);
-
-            // For now, we'll get user ID from email
-            // In production, you might want to cache user details
             UserResponse user = userService.getUserByEmail(email);
 
+            // Create group
             GroupResponse response = groupService.createGroup(request, user.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse(
+                "Group created successfully", response));
+
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
     }
 
@@ -56,9 +69,11 @@ public class GroupController {
     public ResponseEntity<?> getGroupById(@PathVariable Long id) {
         try {
             GroupResponse response = groupService.getGroupById(id);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(createSuccessResponse(
+                "Group retrieved successfully", response));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(createErrorResponse(e.getMessage()));
         }
     }
 
@@ -69,20 +84,30 @@ public class GroupController {
     @GetMapping("/my")
     public ResponseEntity<?> getUserGroups(@RequestHeader("Authorization") String authHeader) {
         try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("Missing or invalid authorization header"));
+            }
+
             // Get user ID from token
             String token = authHeader.substring(7);
             String email = userService.getUserEmailFromToken(token);
-
             UserResponse user = userService.getUserByEmail(email);
+
+            // Get user's groups
             List<GroupResponse> responses = groupService.getUserGroups(user.getId());
-            return ResponseEntity.ok(responses);
+            return ResponseEntity.ok(createSuccessResponse(
+                "Groups retrieved successfully", responses));
+
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
         }
     }
 
     /**
-     * Add member to group
+     * Add member to group by user ID
      * POST /api/groups/{id}/members
      */
     @PostMapping("/{id}/members")
@@ -90,9 +115,42 @@ public class GroupController {
                                        @Valid @RequestBody AddMemberRequest request) {
         try {
             GroupResponse response = groupService.addMember(id, request);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(createSuccessResponse(
+                "Member added successfully", response));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Add member to group by email
+     * POST /api/groups/{id}/members/email
+     */
+    @PostMapping("/{id}/members/email")
+    public ResponseEntity<?> addMemberByEmail(@PathVariable Long id,
+                                              @RequestBody Map<String, String> request,
+                                              @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Validate auth header
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("Missing or invalid authorization header"));
+            }
+
+            String email = request.get("email");
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(createErrorResponse("Email is required"));
+            }
+
+            GroupMemberResponse response = groupService.addMemberByEmail(id, email);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createSuccessResponse(
+                "Member added successfully", response));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
         }
     }
 
@@ -104,9 +162,34 @@ public class GroupController {
     public ResponseEntity<?> removeMember(@PathVariable Long id, @PathVariable Long userId) {
         try {
             GroupResponse response = groupService.removeMember(id, userId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(createSuccessResponse(
+                "Member removed successfully", response));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
         }
+    }
+
+    /**
+     * Create a standardized error response
+     */
+    private Map<String, Object> createErrorResponse(String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", message);
+        return response;
+    }
+
+    /**
+     * Create a standardized success response
+     */
+    private Map<String, Object> createSuccessResponse(String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        if (data != null) {
+            response.put("data", data);
+        }
+        return response;
     }
 }
