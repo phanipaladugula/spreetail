@@ -6,29 +6,21 @@
   color: #667eea;
 }
 
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #667eea;
+.logo-image {
+  display: block;
 }
 
-.logo-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.logo-small .logo-icon svg {
+.logo-small .logo-image {
   width: 24px;
   height: 24px;
 }
 
-.logo-medium .logo-icon svg {
+.logo-medium .logo-image {
   width: 32px;
   height: 32px;
 }
 
-.logo-large .logo-icon svg {
+.logo-large .logo-image {
   width: 40px;
   height: 40px;
 }
@@ -51,11 +43,11 @@
 }
 
 /* Logo hover effect */
-.logo:hover .logo-icon svg {
+.logo:hover .logo-image {
   transform: rotate(-5deg);
   transition: transform 0.3s ease;
 }
 
-.logo .logo-icon svg {
+.logo .logo-image {
   transition: transform 0.3s ease;
 }
