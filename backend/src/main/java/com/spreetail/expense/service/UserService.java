@@ -63,26 +63,13 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         
-        // OTP logic
-        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
-        user.setStatus("PENDING");
-        user.setOtp(otp);
-        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(10));
-
-        if ("development".equalsIgnoreCase(appEnv)) {
-            logger.info("DEVELOPMENT MODE OTP for " + user.getEmail() + " is " + otp);
-        }
+        // Set status to ACTIVE immediately (no OTP)
+        user.setStatus("ACTIVE");
+        user.setOtp(null);
+        user.setOtpExpiry(null);
 
         // Save user to database
         User savedUser = userRepository.save(user);
-        
-        // Send email asynchronously
-        try {
-            emailService.sendRegistrationOtpEmail(user.getEmail(), user.getUsername(), otp);
-        } catch (Exception e) {
-            // Log error but don't fail registration
-            logger.severe("Initial OTP email delivery failed: " + e.getMessage());
-        }
 
         // Convert to response DTO
         return convertToUserResponse(savedUser);
@@ -145,10 +132,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
                 
-        // Check if user is pending verification
-        if ("PENDING".equals(user.getStatus())) {
-            throw new RuntimeException("Please verify your email using the OTP sent to you");
-        }
+        // No PENDING status verification check is required anymore
 
         // Check password
         if (!passwordEncoder.matches(password, user.getPassword())) {

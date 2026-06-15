@@ -28,8 +28,8 @@ export default function Register() {
     setLoading(true)
     try {
       await register({ username: form.username, email: form.email, password: form.password })
-      toast.success('Registration successful! Please check your email for the OTP.')
-      setStep(2)
+      toast.success('Registration successful! Redirecting to login...')
+      navigate('/login')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed')
     } finally {
